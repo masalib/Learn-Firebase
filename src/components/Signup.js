@@ -1,4 +1,4 @@
-import React, { useReducer, useEffect } from "react";
+import React, { useState,useReducer, useEffect } from "react";
 import { createStyles, makeStyles, Theme } from "@material-ui/core/styles";
 import TextField from "@material-ui/core/TextField";
 import Card from "@material-ui/core/Card";
@@ -6,6 +6,7 @@ import CardContent from "@material-ui/core/CardContent";
 import CardActions from "@material-ui/core/CardActions";
 import CardHeader from "@material-ui/core/CardHeader";
 import Button from "@material-ui/core/Button";
+import { useAuth } from "../contexts/AuthContext"
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -104,42 +105,76 @@ const reducer = (state: State, action: Action): State => {
 };
 
 const Signup = () => {
-  const classes = useStyles();
-  const [state, dispatch] = useReducer(reducer, initialState);
+    const classes = useStyles();
+    const [state, dispatch] = useReducer(reducer, initialState);
+    const [error, setError] = useState("")
+    const [successMessage, setSuccessMessage] = useState("")
 
-  useEffect(() => {
-    if (state.username.trim() && state.password.trim() && state.passwordconfirm.trim() ) {
-      dispatch({
-        type: "setIsButtonDisabled",
-        payload: false
-      });
-    } else {
-      dispatch({
-        type: "setIsButtonDisabled",
-        payload: true
-      });
-    }
-  }, [state.username, state.password, state.passwordconfirm]);
+    const { signup } = useAuth()
 
-  const handleSignup = () => {
-    if (state.username === "abc@email.com" && state.password === "password") {
-      dispatch({
-        type: "signupSuccess",
-        payload: "Signup Successfully"
-      });
-    } else {
-      dispatch({
-        type: "signupFailed",
-        payload: "Incorrect username or password"
-      });
-    }
-  };
+    useEffect(() => {
+            if (state.password.trim() !== state.passwordconfirm.trim()){
+                dispatch({
+                    type: "setIsButtonDisabled",
+                    payload: true
+                });        
+            } else if (state.username.trim() && state.password.trim()){
+                dispatch({
+                type: "setIsButtonDisabled",
+                payload: false
+                });
+            } else {
+                dispatch({
+                    type: "setIsButtonDisabled",
+                    payload: true
+                });
+            }
+    }, [state.username, state.password, state.passwordconfirm]);
 
-  const handleKeyPress = (event: React.KeyboardEvent) => {
-    if (event.keyCode === 13 || event.which === 13) {
-      state.isButtonDisabled || handleSignup();
-    }
-  };
+    async function handleSignup (event) {
+        event.preventDefault()      
+        try {
+            setError("")
+            setSuccessMessage("")
+            //sing up ボタンの無効化
+            dispatch({
+                type: "setIsButtonDisabled",
+                payload: true
+            });
+
+            await signup(state.username, state.passwordconfirm)
+            dispatch({
+                type: "signupSuccess",
+                payload: "Signup Successfully"
+            });
+
+            //sing up ボタンの有効化
+            dispatch({
+                type: "setIsButtonDisabled",
+                payload: false
+            });
+            setSuccessMessage("アカウントの作成に成功しました")
+
+        } catch {
+            setError("Failed to create an account")
+            dispatch({
+                type: "signupFailed",
+                payload: "Incorrect username or password"
+            });
+            //sing up ボタンの有効化
+            dispatch({
+                type: "setIsButtonDisabled",
+                payload: false
+            });
+            
+        }
+    };
+
+    const handleKeyPress = (event: React.KeyboardEvent) => {
+        if (event.keyCode === 13 || event.which === 13) {
+        state.isButtonDisabled || handleSignup();
+        }
+    };
 
   const handleUsernameChange: React.ChangeEventHandler<HTMLInputElement> = (
     event
@@ -174,41 +209,43 @@ const Signup = () => {
       <Card className={classes.card}>
         <CardHeader className={classes.header} title="Sign UP " />
         <CardContent>
-          <div>
+        <div>
+            {error && <div variant="danger">{error}</div>}
+            {successMessage && <div variant="danger">{successMessage}</div>}
             <TextField
-              error={state.isError}
-              fullWidth
-              id="username"
-              type="email"
-              label="Username"
-              placeholder="Username"
-              margin="normal"
-              onChange={handleUsernameChange}
-              onKeyPress={handleKeyPress}
+                error={state.isError}
+                fullWidth
+                id="username"
+                type="email"
+                label="Username"
+                placeholder="Username"
+                margin="normal"
+                onChange={handleUsernameChange}
+                onKeyPress={handleKeyPress}
             />
             <TextField
-              error={state.isError}
-              fullWidth
-              id="password"
-              type="password"
-              label="Password"
-              placeholder="Password"
-              margin="normal"
-              helperText={state.helperText}
-              onChange={handlePasswordChange}
-              onKeyPress={handleKeyPress}
+                error={state.isError}
+                fullWidth
+                id="password"
+                type="password"
+                label="Password"
+                placeholder="Password"
+                margin="normal"
+                helperText={state.helperText}
+                onChange={handlePasswordChange}
+                onKeyPress={handleKeyPress}
             />
             <TextField
-              error={state.isError}
-              fullWidth
-              id="password-confirm"
-              type="password"
-              label="Password-confirm"
-              placeholder="Password-confirm"
-              margin="normal"
-              helperText={state.helperText}
-              onChange={handlePasswordConfirmChange}
-              onKeyPress={handleKeyPress}
+                error={state.isError}
+                fullWidth
+                id="password-confirm"
+                type="password"
+                label="Password-confirm"
+                placeholder="Password-confirm"
+                margin="normal"
+                helperText={state.helperText}
+                onChange={handlePasswordConfirmChange}
+                onKeyPress={handleKeyPress}
             />
           </div>
           もしアカウントがあるなら Log In
