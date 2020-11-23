@@ -161,12 +161,27 @@ const Signup = () => {
             setSuccessMessage("アカウントの作成に成功しました")
 
         } catch (e){
-            console.log(e)
-            setError("Failed to create an account")
-            dispatch({
-                type: "signupFailed",
-                payload: "Incorrect username or password"
-            });
+            //エラーのメッセージの表示
+            switch (e.code) {
+                case "auth/network-request-failed":
+                    setError("通信がエラーになったのか、またはタイムアウトになりました。通信環境がいい所で再度やり直してください。");
+                    break;
+                case "auth/weak-password":	//バリデーションでいかないようにするので、基本的にはこのコードはこない
+                    setError("パスワードが短すぎます。6文字以上を入力してください。");
+                    break;
+                case "auth/invalid-email":	//バリデーションでいかないようにするので、基本的にはこのコードはこない
+                    setError("メールアドレスが正しくありません");
+                    break;
+                case "auth/email-already-in-use":
+                    setError("メールアドレスがすでに使用されています。ログインするか別のメールアドレスで作成してください");
+                    break;
+                default:	//想定外
+                    setError("アカウントの作成に失敗しました。通信環境がいい所で再度やり直してください。");
+            }
+            //dispatch({
+            //    type: "signupFailed",
+            //    payload: "Incorrect username or password"
+            //});
             //sing up ボタンの有効化
             dispatch({
                 type: "setIsButtonDisabled",
@@ -229,7 +244,7 @@ const Signup = () => {
         <CardHeader className={classes.header} title="Sign UP " />
         <CardContent>
         <div>
-            {error && <div variant="danger">{error}</div>}
+            {error && <div style={{ color: "red" }}>{error}</div>}
             {successMessage && <div variant="danger">{successMessage}</div>}
             <TextField
                 error={state.isError}
@@ -256,13 +271,12 @@ const Signup = () => {
                 label="Password"
                 placeholder="Password"
                 margin="normal"
-                helperText={state.helperText}
                 onChange={handlePasswordChange}
                 onKeyPress={handleKeyPress}
-                inputRef={register({ required: true, minLength: 5 })}
+                inputRef={register({ required: true, minLength: 6 })}
             />
             {errors.password?.type === "minLength" &&
-            <div style={{ color: "red" }}>パスワードは5文字以上で入力してください</div>}
+            <div style={{ color: "red" }}>パスワードは6文字以上で入力してください</div>}
             <TextField
                 error={state.isError}
                 fullWidth
@@ -272,7 +286,6 @@ const Signup = () => {
                 label="Password-confirm"
                 placeholder="Password-confirm"
                 margin="normal"
-                helperText={state.helperText}
                 onChange={handlePasswordConfirmChange}
                 onKeyPress={handleKeyPress}
                 inputRef={register}
