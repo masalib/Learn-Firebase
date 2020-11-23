@@ -111,29 +111,33 @@ const Signup = () => {
     const [error, setError] = useState("")
     const [successMessage, setSuccessMessage] = useState("")
     const { signup } = useAuth()
-    const { register, handleSubmit, errors, formState } = useForm();
+    const { register, handleSubmit, errors, trigger  } = useForm();
 
     useEffect(() => {
             if (state.password.trim() !== state.passwordconfirm.trim()){
+                //clearErrors() 
                 dispatch({
-                    type: "setIsButtonDisabled",
-                    payload: true
+                  type: "setIsButtonDisabled",
+                  payload: true
                 });        
             } else if (state.username.trim() && state.password.trim()){
+                //trigger();
                 dispatch({
-                type: "setIsButtonDisabled",
-                payload: false
+                  type: "setIsButtonDisabled",
+                  payload: false
                 });
             } else {
+                //clearErrors()
                 dispatch({
-                    type: "setIsButtonDisabled",
-                    payload: true
+                  type: "setIsButtonDisabled",
+                  payload: true
                 });
             }
     }, [state.username, state.password, state.passwordconfirm]);
 
     async function handleSignup (data) {  //react-hook-formを導入したためevent -> dataに変更
         //event.preventDefault()      //react-hook-formを導入したため削除
+
         try {
             setError("")
             setSuccessMessage("")
@@ -156,7 +160,8 @@ const Signup = () => {
             });
             setSuccessMessage("アカウントの作成に成功しました")
 
-        } catch {
+        } catch (e){
+            console.log(e)
             setError("Failed to create an account")
             dispatch({
                 type: "signupFailed",
@@ -173,13 +178,25 @@ const Signup = () => {
 
     const handleKeyPress = (event: React.KeyboardEvent) => {
         if (event.keyCode === 13 || event.which === 13) {
-          console.log("handleKeyPress 13 enter")
-          state.isButtonDisabled || handleSubmit(handleSignup());
 
+          if (!state.isButtonDisabled){
+            handleKeyPresstrigger()
+            if (errors) {
+              //errorメッセージを表示する
+            } else {
+              handleSignup()  
+            }
+          }
         }
     };
 
-  const handleUsernameChange: React.ChangeEventHandler<HTMLInputElement> = (
+    async function handleKeyPresstrigger () {
+      const result = await trigger();
+      return result
+
+    }
+
+    const handleUsernameChange: React.ChangeEventHandler<HTMLInputElement> = (
     event
   ) => {
     dispatch({
