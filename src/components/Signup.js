@@ -1,4 +1,5 @@
 import React, { useState,useReducer, useEffect } from "react";
+import { useForm } from "react-hook-form";
 import { createStyles, makeStyles, Theme } from "@material-ui/core/styles";
 import TextField from "@material-ui/core/TextField";
 import Card from "@material-ui/core/Card";
@@ -109,8 +110,8 @@ const Signup = () => {
     const [state, dispatch] = useReducer(reducer, initialState);
     const [error, setError] = useState("")
     const [successMessage, setSuccessMessage] = useState("")
-
     const { signup } = useAuth()
+    const { register, handleSubmit, errors, formState } = useForm();
 
     useEffect(() => {
             if (state.password.trim() !== state.passwordconfirm.trim()){
@@ -131,8 +132,8 @@ const Signup = () => {
             }
     }, [state.username, state.password, state.passwordconfirm]);
 
-    async function handleSignup (event) {
-        event.preventDefault()      
+    async function handleSignup (data) {  //react-hook-formを導入したためevent -> dataに変更
+        //event.preventDefault()      //react-hook-formを導入したため削除
         try {
             setError("")
             setSuccessMessage("")
@@ -172,7 +173,9 @@ const Signup = () => {
 
     const handleKeyPress = (event: React.KeyboardEvent) => {
         if (event.keyCode === 13 || event.which === 13) {
-        state.isButtonDisabled || handleSignup();
+          console.log("handleKeyPress 13 enter")
+          state.isButtonDisabled || handleSubmit(handleSignup());
+
         }
     };
 
@@ -203,7 +206,6 @@ const Signup = () => {
     });
   };
 
-
   return (
     <form className={classes.container} noValidate autoComplete="off">
       <Card className={classes.card}>
@@ -216,17 +218,23 @@ const Signup = () => {
                 error={state.isError}
                 fullWidth
                 id="username"
+                name="username"
                 type="email"
                 label="Username"
                 placeholder="Username"
                 margin="normal"
                 onChange={handleUsernameChange}
                 onKeyPress={handleKeyPress}
+                inputRef={register({pattern: /^[A-Za-z0-9]{1}[A-Za-z0-9_.-]*@{1}[A-Za-z0-9_.-]{1,}\.[A-Za-z0-9]{1,}$/ })}
             />
+            {errors.username?.type === "pattern" &&
+            <div style={{ color: "red" }}>メールアドレスの形式で入力されていません</div>}
+
             <TextField
                 error={state.isError}
                 fullWidth
                 id="password"
+                name="password"
                 type="password"
                 label="Password"
                 placeholder="Password"
@@ -234,11 +242,15 @@ const Signup = () => {
                 helperText={state.helperText}
                 onChange={handlePasswordChange}
                 onKeyPress={handleKeyPress}
+                inputRef={register({ required: true, minLength: 5 })}
             />
+            {errors.password?.type === "minLength" &&
+            <div style={{ color: "red" }}>パスワードは5文字以上で入力してください</div>}
             <TextField
                 error={state.isError}
                 fullWidth
                 id="password-confirm"
+                name="password-confirm"
                 type="password"
                 label="Password-confirm"
                 placeholder="Password-confirm"
@@ -246,6 +258,7 @@ const Signup = () => {
                 helperText={state.helperText}
                 onChange={handlePasswordConfirmChange}
                 onKeyPress={handleKeyPress}
+                inputRef={register}
             />
           </div>
           もしアカウントがあるなら Log In
@@ -256,7 +269,7 @@ const Signup = () => {
             size="large"
             color="secondary"
             className={classes.signupBtn}
-            onClick={handleSignup}
+            onClick={handleSubmit(handleSignup)}
             disabled={state.isButtonDisabled}
           >
             Signup
