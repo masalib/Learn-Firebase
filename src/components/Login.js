@@ -17,7 +17,7 @@ const useStyles = makeStyles((theme: Theme) =>
       width: 400,
       margin: `${theme.spacing(0)} auto`
     },
-    signupBtn: {
+    loginBtn: {
       marginTop: theme.spacing(2),
       flexGrow: 1
     },
@@ -36,7 +36,6 @@ const useStyles = makeStyles((theme: Theme) =>
 type State = {
   username: string,
   password:  string,
-  passwordconfirm:  string,
   isButtonDisabled: boolean,
   helperText: string,
   isError: boolean
@@ -46,7 +45,6 @@ type State = {
 const initialState: State = {
   username: "",
   password: "",
-  passwordconfirm: "",
   isButtonDisabled: true,
   helperText: "",
   isError: false
@@ -55,10 +53,9 @@ const initialState: State = {
 type Action =
   | { type: "setUsername", payload: string }
   | { type: "setPassword", payload: string }
-  | { type: "setPasswordConfirm", payload: string }
   | { type: "setIsButtonDisabled", payload: boolean }
-  | { type: "signupSuccess", payload: string }
-  | { type: "signupFailed", payload: string }
+  | { type: "loginSuccess", payload: string }
+  | { type: "loginFailed", payload: string }
   | { type: "setIsError", payload: boolean };
 
 const reducer = (state: State, action: Action): State => {
@@ -73,23 +70,18 @@ const reducer = (state: State, action: Action): State => {
         ...state,
         password: action.payload
       };
-    case "setPasswordConfirm":
-    return {
-        ...state,
-        passwordconfirm: action.payload
-    };
     case "setIsButtonDisabled":
       return {
         ...state,
         isButtonDisabled: action.payload
       };
-    case "signupSuccess":
+    case "loginSuccess":
       return {
         ...state,
         helperText: action.payload,
         isError: false
       };
-    case "signupFailed":
+    case "loginFailed":
       return {
         ...state,
         helperText: action.payload,
@@ -105,37 +97,31 @@ const reducer = (state: State, action: Action): State => {
   }
 };
 
-const Signup = () => {
+const Login = () => {
     const classes = useStyles();
     const [state, dispatch] = useReducer(reducer, initialState);
     const [error, setError] = useState("")
     const [successMessage, setSuccessMessage] = useState("")
-    const { signup ,currentUser} = useAuth()
+    const { login } = useAuth()
     const { register, handleSubmit, errors, trigger  } = useForm();
 
     useEffect(() => {
-            if (state.password.trim() !== state.passwordconfirm.trim()){
-                //clearErrors() 
-                dispatch({
-                  type: "setIsButtonDisabled",
-                  payload: true
-                });        
-            } else if (state.username.trim() && state.password.trim()){
-                //trigger();
-                dispatch({
-                  type: "setIsButtonDisabled",
-                  payload: false
-                });
-            } else {
-                //clearErrors()
-                dispatch({
-                  type: "setIsButtonDisabled",
-                  payload: true
-                });
-            }
-    }, [state.username, state.password, state.passwordconfirm]);
+      if (state.username.trim() && state.password.trim()){
+          //trigger();
+          dispatch({
+            type: "setIsButtonDisabled",
+            payload: false
+          });
+      } else {
+          //clearErrors()
+          dispatch({
+            type: "setIsButtonDisabled",
+            payload: true
+          });
+      }
+    }, [state.username, state.password]);
 
-    async function handleSignup (data) {  //react-hook-formを導入したためevent -> dataに変更
+    async function handleLogin (data) {  //react-hook-formを導入したためevent -> dataに変更
         //event.preventDefault()      //react-hook-formを導入したため削除
 
         try {
@@ -147,10 +133,10 @@ const Signup = () => {
                 payload: true
             });
 
-            await signup(state.username, state.passwordconfirm)
+            await login(state.username, state.password)
             dispatch({
-                type: "signupSuccess",
-                payload: "Signup Successfully"
+                type: "loginSuccess",
+                payload: "Login Successfully"
             });
 
             //sing up ボタンの有効化
@@ -179,7 +165,7 @@ const Signup = () => {
                     setError("アカウントの作成に失敗しました。通信環境がいい所で再度やり直してください。");
             }
             //dispatch({
-            //    type: "signupFailed",
+            //    type: "loginFailed",
             //    payload: "Incorrect username or password"
             //});
             //sing up ボタンの有効化
@@ -199,7 +185,7 @@ const Signup = () => {
             if (errors) {
               //errorメッセージを表示する
             } else {
-              handleSignup()  
+              handleLogin()  
             }
           }
         }
@@ -211,7 +197,7 @@ const Signup = () => {
 
     }
 
-    const handleUsernameChange: React.ChangeEventHandler<HTMLInputElement> = (
+  const handleUsernameChange: React.ChangeEventHandler<HTMLInputElement> = (
     event
   ) => {
     dispatch({
@@ -229,19 +215,10 @@ const Signup = () => {
     });
   };
 
-  const handlePasswordConfirmChange: React.ChangeEventHandler<HTMLInputElement> = (
-    event
-  ) => {
-    dispatch({
-      type: "setPasswordConfirm",
-      payload: event.target.value
-    });
-  };
-
   return (
     <form className={classes.container} noValidate autoComplete="off">
       <Card className={classes.card}>
-        <CardHeader className={classes.header} title="Sign UP " />
+        <CardHeader className={classes.header} title="Login" />
         <CardContent>
         <div>
             {error && <div style={{ color: "red" }}>{error}</div>}
@@ -277,32 +254,19 @@ const Signup = () => {
             />
             {errors.password?.type === "minLength" &&
             <div style={{ color: "red" }}>パスワードは6文字以上で入力してください</div>}
-            <TextField
-                error={state.isError}
-                fullWidth
-                id="password-confirm"
-                name="password-confirm"
-                type="password"
-                label="Password-confirm"
-                placeholder="Password-confirm"
-                margin="normal"
-                onChange={handlePasswordConfirmChange}
-                onKeyPress={handleKeyPress}
-                inputRef={register}
-            />
           </div>
-          もしアカウントがあるなら Log In
+          もしアカウントがないならこちらからアカウントを作成してください
         </CardContent>
         <CardActions>
           <Button
             variant="contained"
             size="large"
             color="secondary"
-            className={classes.signupBtn}
-            onClick={handleSubmit(handleSignup)}
+            className={classes.loginBtn}
+            onClick={handleSubmit(handleLogin)}
             disabled={state.isButtonDisabled}
           >
-            Signup
+            Login
           </Button>
         </CardActions>
       </Card>
@@ -310,4 +274,4 @@ const Signup = () => {
   );
 };
 
-export default Signup;
+export default Login;

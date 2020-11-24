@@ -15,21 +15,27 @@ export function AuthProvider({ children }) {
         return auth.createUserWithEmailAndPassword(email, password)
     }
 
+    function login(email, password) {
+      return auth.signInWithEmailAndPassword(email, password)
+    }
+
     const value = {
         currentUser,
-        signup
+        signup,
+        login
     }
 
     useEffect(() => {
         // Firebase Authのメソッド。ログイン状態が変化すると呼び出される
         auth.onAuthStateChanged(user => {
           setCurrentUser(user);
+          setLoading(false)
         });
       }, []);
 
     return (
         <AuthContext.Provider value={value}>
-          {children}
+           {!loading && children}
         </AuthContext.Provider>
     )
 }    
