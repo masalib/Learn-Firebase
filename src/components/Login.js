@@ -8,6 +8,8 @@ import CardActions from "@material-ui/core/CardActions";
 import CardHeader from "@material-ui/core/CardHeader";
 import Button from "@material-ui/core/Button";
 import { useAuth } from "../contexts/AuthContext"
+import { Link , useHistory} from "react-router-dom"
+
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -101,9 +103,9 @@ const Login = () => {
     const classes = useStyles();
     const [state, dispatch] = useReducer(reducer, initialState);
     const [error, setError] = useState("")
-    const [successMessage, setSuccessMessage] = useState("")
     const { login } = useAuth()
     const { register, handleSubmit, errors, trigger  } = useForm();
+    const history = useHistory()
 
     useEffect(() => {
       if (state.username.trim() && state.password.trim()){
@@ -126,7 +128,6 @@ const Login = () => {
 
         try {
             setError("")
-            setSuccessMessage("")
             //sing up ボタンの無効化
             dispatch({
                 type: "setIsButtonDisabled",
@@ -134,17 +135,7 @@ const Login = () => {
             });
 
             await login(state.username, state.password)
-            dispatch({
-                type: "loginSuccess",
-                payload: "Login Successfully"
-            });
-
-            //sing up ボタンの有効化
-            dispatch({
-                type: "setIsButtonDisabled",
-                payload: false
-            });
-            setSuccessMessage("アカウントの作成に成功しました")
+            history.push("/dashboard")
 
         } catch (e){
             //エラーのメッセージの表示
@@ -152,17 +143,20 @@ const Login = () => {
                 case "auth/network-request-failed":
                     setError("通信がエラーになったのか、またはタイムアウトになりました。通信環境がいい所で再度やり直してください。");
                     break;
-                case "auth/weak-password":	//バリデーションでいかないようにするので、基本的にはこのコードはこない
-                    setError("パスワードが短すぎます。6文字以上を入力してください。");
+                case "auth/weak-password":	
+                    setError("メールアドレスまたはパスワードが間違えています。");
                     break;
-                case "auth/invalid-email":	//バリデーションでいかないようにするので、基本的にはこのコードはこない
-                    setError("メールアドレスが正しくありません");
+                case "auth/invalid-email":	
+                    setError("メールアドレスまたはパスワードが間違えています。");
                     break;
-                case "auth/email-already-in-use":
-                    setError("メールアドレスがすでに使用されています。ログインするか別のメールアドレスで作成してください");
+                case "auth/user-not-found":	
+                    setError("メールアドレスまたはパスワードが間違えています。");
                     break;
+                case "auth/user-disabled":	
+                    setError("入力されたメールアドレスは無効（BAN）になっています。");
+                    break;                    
                 default:	//想定外
-                    setError("アカウントの作成に失敗しました。通信環境がいい所で再度やり直してください。");
+                    setError("ログインに失敗しました。通信環境がいい所で再度やり直してください。");
             }
             //dispatch({
             //    type: "loginFailed",
@@ -222,7 +216,6 @@ const Login = () => {
         <CardContent>
         <div>
             {error && <div style={{ color: "red" }}>{error}</div>}
-            {successMessage && <div variant="danger">{successMessage}</div>}
             <TextField
                 error={state.isError}
                 fullWidth
@@ -255,7 +248,7 @@ const Login = () => {
             {errors.password?.type === "minLength" &&
             <div style={{ color: "red" }}>パスワードは6文字以上で入力してください</div>}
           </div>
-          もしアカウントがないならこちらからアカウントを作成してください
+          もしアカウントがないなら<Link to="/signup">こちら</Link>からアカウントを作成してください
         </CardContent>
         <CardActions>
           <Button

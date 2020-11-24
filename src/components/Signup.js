@@ -8,6 +8,7 @@ import CardActions from "@material-ui/core/CardActions";
 import CardHeader from "@material-ui/core/CardHeader";
 import Button from "@material-ui/core/Button";
 import { useAuth } from "../contexts/AuthContext"
+import { Link , useHistory} from "react-router-dom"
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -110,8 +111,9 @@ const Signup = () => {
     const [state, dispatch] = useReducer(reducer, initialState);
     const [error, setError] = useState("")
     const [successMessage, setSuccessMessage] = useState("")
-    const { signup ,currentUser} = useAuth()
+    const { signup } = useAuth()
     const { register, handleSubmit, errors, trigger  } = useForm();
+    const history = useHistory()
 
     useEffect(() => {
             if (state.password.trim() !== state.passwordconfirm.trim()){
@@ -158,7 +160,11 @@ const Signup = () => {
                 type: "setIsButtonDisabled",
                 payload: false
             });
-            setSuccessMessage("アカウントの作成に成功しました")
+            setSuccessMessage("アカウントの作成に成功しました。ダッシュボードにリダレクトします")
+            setTimeout(function(){
+                console.log("リダレクト処理")
+                history.push("/dashboard")
+            },2000);
 
         } catch (e){
             //エラーのメッセージの表示
@@ -291,7 +297,7 @@ const Signup = () => {
                 inputRef={register}
             />
           </div>
-          もしアカウントがあるなら Log In
+          もしアカウントがあるなら<Link to="/login">こちら</Link>からログインしてください
         </CardContent>
         <CardActions>
           <Button
