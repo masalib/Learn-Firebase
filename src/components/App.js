@@ -6,6 +6,8 @@ import Login  from "./Login"
 
 import { AuthProvider } from "../contexts/AuthContext"
 import { BrowserRouter as Router, Switch, Route } from "react-router-dom"
+import AuthFirebaseRoute from './AuthFirebaseRoute'
+
 
 function App() {
   return (
@@ -16,7 +18,7 @@ function App() {
           <Route path="/signup" component={Signup} />
           <Route exact path="/" component={Home} />
           <Route path="/login" component={Login} />
-          <Route path="/dashboard" component={Dashboard} />
+          <AuthFirebaseRoute path="/dashboard" component={Dashboard} />
         </Switch>
       </AuthProvider>
     </Router>
