@@ -13,6 +13,9 @@ const Home = () => {
             <h2>
                 <Link to="/signup">signup</Link>
             </h2>
+            <h2>
+                <Link to="/forgotPassword">forgotPassword</Link>
+            </h2>
         </div>
     )
 }

@@ -23,11 +23,43 @@ export function AuthProvider({ children }) {
       return auth.signOut()
     }
 
+    function sendEmailVerification(){
+      const actionCodeSettings = {
+        url: 'http://localhost:3000/dashboard' ,
+      }    
+      return currentUser.sendEmailVerification(actionCodeSettings)
+    }
+
+
+    function resetPassword(email) {
+      //https://firebase.google.com/docs/auth/web/passing-state-in-email-actions
+      const actionCodeSettings = {
+        url: 'http://localhost:3000/?email=' + email,
+        /*
+        iOS: {
+          bundleId: 'com.example.ios'
+        },
+        android: {
+          packageName: 'com.example.android',
+          installApp: true,
+          minimumVersion: '12'
+        },
+        handleCodeInApp: true,
+        // When multiple custom dynamic link domains are defined, specify which
+        // one to use.
+        dynamicLinkDomain: "example.page.link"
+        */
+      };
+      return auth.sendPasswordResetEmail(email,actionCodeSettings)
+    }
+
     const value = {
         currentUser,
         signup,
         login,
-        logout
+        logout,
+        resetPassword,
+        sendEmailVerification
     }
 
     useEffect(() => {

@@ -12,10 +12,15 @@ const useStyles = makeStyles((theme: Theme) =>
       width: 400,
       margin: `${theme.spacing(0)} auto`
     },
-    looutBtn: {
-      marginTop: theme.spacing(2),
+    logoutBtn: {
+      margin: theme.spacing(2),
       flexGrow: 1
     },
+    handlesendEmailVerificationBtn: {
+        margin: theme.spacing(2),
+        flexGrow: 1
+      },
+  
     header: {
       textAlign: "center",
       background: "#212121",
@@ -31,7 +36,7 @@ const useStyles = makeStyles((theme: Theme) =>
 const Dashboard = () => {
     const classes = useStyles();
     const [error, setError] = useState("")
-    const { currentUser, logout } = useAuth()
+    const { currentUser, logout ,sendEmailVerification} = useAuth()
     const history = useHistory()
   
     async function handleLogout() {
@@ -44,11 +49,28 @@ const Dashboard = () => {
         setError("Failed to log out")
       }
     }
-    return (
+
+    async function handlesendEmailVerification() {
+        setError("")
+        //setError("メールをおくりました。メール有効化をお願いします")
+        
+        try {
+          await sendEmailVerification()
+          setError("メールをおくりました。メール有効化をお願いします")
+
+        } catch (e){
+            console.log(e)
+            setError("有効化メールの送信に失敗しました")
+        }
+        
+      }
+
+
+      return (
         <div>
             Dashboard
             テスト用のリンク（あとで治す）
-            {error && {error}}
+            {error && <div style={{ color: "red" }}>{error}</div>}
             <strong>Email:</strong> {currentUser.email}
             <h2>
                 <Link to="/login">Login</Link>
@@ -61,13 +83,27 @@ const Dashboard = () => {
                 variant="contained"
                 size="large"
                 color="secondary"
-                className={classes.loginBtn}
+                className={classes.logoutBtn}
                 onClick={handleLogout}
             >
                     Logout
                 </Button>
 
             </div>
+
+            <div>
+                <Button
+                variant="contained"
+                size="large"
+                color="secondary"
+                className={classes.handlesendEmailVerificationBtn}
+                onClick={handlesendEmailVerification}
+            >
+                    handlesendEmailVerification
+                </Button>
+
+            </div>
+
         </div>
     )
 }
