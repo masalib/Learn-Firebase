@@ -9,6 +9,9 @@ import { AuthProvider } from "../contexts/AuthContext"
 import { BrowserRouter as Router, Switch, Route } from "react-router-dom"
 import AuthFirebaseRoute from './AuthFirebaseRoute'
 
+//テスト用なのであとで消す
+import UpLoadTest  from "./UpLoadTest"
+
 
 function App() {
   return (
@@ -22,6 +25,8 @@ function App() {
           <Route path="/forgotPassword" component={ForgotPassword} />
 
           <AuthFirebaseRoute path="/dashboard" component={Dashboard} />
+          <AuthFirebaseRoute path="/upLoadTest" component={UpLoadTest} />
+
         </Switch>
       </AuthProvider>
     </Router>
