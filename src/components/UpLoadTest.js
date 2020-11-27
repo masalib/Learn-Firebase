@@ -1,37 +1,41 @@
 import React , { useState } from 'react'
 import { Link } from "react-router-dom"
-import app,{ storage } from "../firebase"
+import app  from "../firebase"
+import { useAuth } from "../contexts/AuthContext"
 
+//import { v4 as uuid } from 'uuid';
 
 const UpLoadTest = () => {
-        //const storageUrl = "gs//" + process.env.REACT_APP_STORAGE_BUCKET
-        const storageUrl = "gs//learn-firebase-masalib.appspot.com" //+ process.env.REACT_APP_STORAGE_BUCKET
-
-        console.log("storageUrl:"+ storageUrl);
-
         const [image, setImage] = useState("");
         const [imageUrl, setImageUrl] = useState("");
+        const { currentUser} = useAuth()
+
+
+
         const handleImage = event => {
             const image = event.target.files[0];
             setImage(image);
+
+            currentUser.getIdToken(true)
+            .then((idToken) => {
+              console.log(idToken);
+            })
+            .catch((error) => {
+              console.log(error);
+            });
+
         };
+
         const onSubmit = event => {
             event.preventDefault();
             if (image === "") {
-            console.log("ファイルが選択されていません");
+                console.log("ファイルが選択されていません");
             }
             // アップロード処理
             console.log("アップロード処理");
-
-            console.log("storageを参照");
-
-            const storages = app.storage(storageUrl);//storageを参照
-            console.log(storages)
-            console.log("どのフォルダの配下に入れるか");
-            const storageRef = storages.ref("images");//どのフォルダの配下に入れるか
-
-            console.log("ファイル名");
-            const imagesRef = storageRef.child(`${image.name}`);//ファイル名
+            const storages = app.storage();//storageを参照
+            const storageRef = storages.ref("images/users/" + currentUser.uid + "/");//どのフォルダの配下に入れるか
+            const imagesRef = storageRef.child("profilePicture.png");//ファイル名
 
             console.log("ファイルをアップする行為");
             const upLoadTask = imagesRef.put(image);
@@ -49,6 +53,7 @@ const UpLoadTest = () => {
                 () => {
                     upLoadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {
                     console.log("File available at", downloadURL);
+                    setImageUrl(downloadURL )
                     });
                 }
             );
@@ -60,13 +65,12 @@ const UpLoadTest = () => {
             <h2>
                 <Link to="/">home</Link>
             </h2>
-            <div>{`REACT_APP_STORAGEBUCKET:${process.env.REACT_APP_STORAGEBUCKET}`}</div>
-
             <form onSubmit={onSubmit}>
                  <input type="file" onChange={handleImage} />
                 <button>Upload</button>
             </form>
-             <img src={imageUrl} alt="uploaded" />
+            {imageUrl && <div ><img src={imageUrl} alt="uploaded" /></div>}
+             
         </div>
     )
 }
