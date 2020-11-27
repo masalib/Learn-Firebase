@@ -139,6 +139,7 @@ const Login = () => {
 
         } catch (e){
             //エラーのメッセージの表示
+
             switch (e.code) {
                 case "auth/network-request-failed":
                     setError("通信がエラーになったのか、またはタイムアウトになりました。通信環境がいい所で再度やり直してください。");
@@ -155,8 +156,12 @@ const Login = () => {
                 case "auth/user-disabled":	
                     setError("入力されたメールアドレスは無効（BAN）になっています。");
                     break;                    
+                case "auth/wrong-password":	
+                    setError("メールアドレスまたはパスワードが間違えています。");
+                    break;                    
                 default:	//想定外
                     setError("ログインに失敗しました。通信環境がいい所で再度やり直してください。");
+                    console.log(e)
             }
             //dispatch({
             //    type: "loginFailed",

@@ -1,13 +1,20 @@
+
+import { BrowserRouter as Router, Switch, Route } from "react-router-dom"
+
+import { AuthProvider } from "../contexts/AuthContext"  //共有用
+import AuthFirebaseRoute from './AuthFirebaseRoute' //ログイン認証
+
+//認証なし
 import Signup from "./Signup"
 import Home from "./Home"
-import Dashboard  from "./Dashboard"
 import Login  from "./Login"
-
 import ForgotPassword  from "./ForgotPassword"
 
-import { AuthProvider } from "../contexts/AuthContext"
-import { BrowserRouter as Router, Switch, Route } from "react-router-dom"
-import AuthFirebaseRoute from './AuthFirebaseRoute'
+//認証あり
+import Dashboard  from "./Dashboard"
+import UpdateProfile  from "./UpdateProfile"
+
+
 
 //テスト用なのであとで消す
 import UpLoadTest  from "./UpLoadTest"
@@ -26,6 +33,7 @@ function App() {
 
           <AuthFirebaseRoute path="/dashboard" component={Dashboard} />
           <AuthFirebaseRoute path="/upLoadTest" component={UpLoadTest} />
+          <AuthFirebaseRoute path="/UpdateProfile" component={UpdateProfile} />
 
         </Switch>
       </AuthProvider>

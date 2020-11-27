@@ -53,13 +53,22 @@ export function AuthProvider({ children }) {
       return auth.sendPasswordResetEmail(email,actionCodeSettings)
     }
 
+    function updatePassword(password) {
+      return currentUser.updatePassword(password)
+    }
+
+    function updateEmail(email) {
+      return currentUser.updateEmail(email)
+    }    
     const value = {
         currentUser,
         signup,
         login,
         logout,
         resetPassword,
-        sendEmailVerification
+        sendEmailVerification,
+        updatePassword,
+        updateEmail
     }
 
     useEffect(() => {
