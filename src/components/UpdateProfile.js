@@ -5,11 +5,14 @@ import {
     Typography,
     Paper,
     Button,
-    TextField
+    TextField,
+    Fab
   } from '@material-ui/core';
 
 import { useAuth } from "../contexts/AuthContext"
 import { Link , useHistory} from "react-router-dom"
+import AddPhotoAlternateIcon from "@material-ui/icons/AddPhotoAlternate";
+import app  from "../firebase"
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -18,11 +21,24 @@ const useStyles = makeStyles((theme: Theme) =>
         margin: 'auto',
         maxWidth: 480
     },
-    signupBtn: {
+    updateProfileBtn: {
       marginTop: theme.spacing(2),
       flexGrow: 1,
       color:'primary'
     },
+    imagephotoURL: {
+        width: "80%",
+        margin: '10px',
+
+    },
+    inputFile: {
+        display: "none"
+    },
+    subtitle2: {
+        color:"#757575"
+    },
+
+
   })
 );
 
@@ -32,6 +48,7 @@ type State = {
   password:  string,
   passwordconfirm:  string,
   displayName:  string,
+  photoURL:  string,
   isButtonDisabled: boolean,
   helperText: string,
   isError: boolean
@@ -43,6 +60,7 @@ let initialState: State = {
   password: "",
   passwordconfirm: "",
   displayName: "",
+  photoURL: "",
   isButtonDisabled: true,
   helperText: "",
   isError: false
@@ -59,6 +77,7 @@ type Action =
   | { type: "setPassword", payload: string }
   | { type: "setPasswordConfirm", payload: string }
   | { type: "setDisplayName", payload: string }
+  | { type: "setPhotoURL", payload: string }
   | { type: "setIsButtonDisabled", payload: boolean }
   | { type: "signupSuccess", payload: string }
   | { type: "signupFailed", payload: string }
@@ -85,6 +104,11 @@ const reducer = (state: State, action: Action): State => {
     return {
         ...state,
         displayName: action.payload
+    };
+    case "setPhotoURL":
+    return {
+        ...state,
+        photoURL: action.payload
     };
     case "setIsButtonDisabled":
       return {
@@ -126,6 +150,8 @@ const UpdateProfile = () => {
 
     //NULLだと@material-uiのButtonでエラーになったのでvalueに値をいれる
     currentUser.displayName ? initialState = {...initialState,displayName:currentUser.displayName} : initialState = {...initialState,displayName:""}
+    currentUser.photoURL ? initialState = {...initialState,photoURL:currentUser.photoURL} : initialState = {...initialState,photoURL:""}
+
     //...initialStateはinitialStateの配列です。「,username:currentUser.email,displayName:currentUser.email」はinitialStateのusernameとdisplayNameだけを更新しています
     initialState = {...initialState,username:currentUser.email}
 
@@ -181,8 +207,11 @@ const UpdateProfile = () => {
                 promises.push(updatePassword(state.password))
             }
 
-            if (state.displayName !== currentUser.displayName) {
-                updatProfileData = {...updatProfileData,displayName:state.displayName}
+            if (state.displayName !== currentUser.displayName || state.photoURL !== currentUser.photoURL) {
+                updatProfileData = {...updatProfileData
+                                    ,displayName:state.displayName
+                                    ,photoURL:state.photoURL
+                                    }
                 promises.push(updateProfile(updatProfileData))
             }
 
@@ -284,6 +313,42 @@ const UpdateProfile = () => {
         }
       }
 
+    const handleImage = event => {
+        const image = event.target.files[0];
+        //setImage(image);
+
+        // アップロード処理
+        console.log("アップロード処理");
+        const storages = app.storage();//storageを参照
+        const storageRef = storages.ref("images/users/" + currentUser.uid + "/");//どのフォルダの配下に入れるか
+        const imagesRef = storageRef.child("profilePicture.png");//ファイル名
+
+        console.log("ファイルをアップする行為");
+        const upLoadTask = imagesRef.put(image);
+
+        console.log("タスク実行前");
+
+        upLoadTask.on(
+            "state_changed",
+            (snapshot) => {
+                console.log("snapshot", snapshot);
+            },
+            (error) => {
+                console.log("err", error);
+            },
+            () => {
+                upLoadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {
+                //console.log("File available at", downloadURL);
+                const url = new URL(downloadURL)
+                console.log(url.href + url.pathname + "?alt=media")
+                dispatch({
+                    type: "setPhotoURL",
+                    payload: url.href + url.pathname + "?alt=media"
+                });
+                });
+            }
+        );
+    };
 
     //あとで原因を調べる。わからない場合は別のツールを検討する
     formState.isSubmitted = false   //一回submittedになるとレンダリングが遅くなり、変な動きするので強制的にfalseにする
@@ -359,12 +424,29 @@ const UpdateProfile = () => {
                     <div style={{ color: "red" }}>表示名は4文字以上で入力してください</div>}
 
 
+                    <Typography className={classes.subtitle2} variant="subtitle2">アバター</Typography>
+                    <Paper elevation={1} justify="center">
+                        <input
+                            accept="image/*"
+                            className={classes.inputFile}
+                            id="contained-button-file"
+                            multiple
+                            type="file"
+                            onChange={handleImage}
+                        />
+                        <label htmlFor="contained-button-file">
+                            {state.photoURL && <div><img className={classes.imagephotoURL} src={state.photoURL} alt="photoURL" /><Fab component="span" className={classes.button}><AddPhotoAlternateIcon /></Fab></div>}
+                            {!state.photoURL && <>アバターが登録されていません{' '}{' '}{' '}<Fab component="span" className={classes.button}><AddPhotoAlternateIcon /></Fab></>}
+                            
+                        </label>
+                    </Paper>
+
                     <Button
                         variant="contained"
                         size="large"
                         fullWidth
                         color="primary"
-                        className={classes.signupBtn}
+                        className={classes.updateProfileBtn}
                         onClick={handleSubmit(handleUpdateProfile)}
                         disabled={state.isButtonDisabled}
                     >
