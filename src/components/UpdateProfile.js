@@ -6,7 +6,10 @@ import {
     Paper,
     Button,
     TextField,
-    Fab
+    Fab,
+    Modal,
+    Backdrop,
+    Fade
   } from '@material-ui/core';
 
 import { useAuth } from "../contexts/AuthContext"
@@ -39,6 +42,17 @@ const useStyles = makeStyles((theme: Theme) =>
     subtitle2: {
         color:"#757575"
     },
+    modal: {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    paper: {
+        backgroundColor: theme.palette.background.paper,
+        border: '2px solid #000',
+        boxShadow: theme.shadows[5],
+        padding: theme.spacing(2, 4, 3),
+      },
 
 
   })
@@ -160,6 +174,7 @@ const UpdateProfile = () => {
     const [state, dispatch] = useReducer(reducer, initialState);
     const [error, setError] = useState("")
     const [successMessage, setSuccessMessage] = useState("")
+    const [open, setOpen] = React.useState(false);      //モーダル用の変数
     const { register, handleSubmit, errors ,formState} = useForm();
     const history = useHistory()
 
@@ -315,20 +330,8 @@ const UpdateProfile = () => {
         }
       }
 
-    const handleImage = event => {
-        const image = event.target.files[0];
-        //setImage(image);
-
-
-    };
-
-    const defaultSrc =
-          "https://raw.githubusercontent.com/roadmanfong/react-cropper/master/example/img/child.jpg";
-
-    const [image, setImage] = useState(defaultSrc);
-    const [cropData, setCropData] = useState("#");
-    const [cropper, setCropper] = useState();
-    const onChange = (e) => {
+    const handleImage = e => {
+        //const image = e.target.files[0];
         e.preventDefault();
         let files;
         if (e.dataTransfer) {
@@ -338,57 +341,61 @@ const UpdateProfile = () => {
         }
         const reader = new FileReader();
         reader.onload = () => {
-        setImage(reader.result);
-    };
+            setImage(reader.result);
+        };
         reader.readAsDataURL(files[0]);
-  };
+        setOpen(true)
+    };
 
-  const getCropData  = async(e) => {
-    e.preventDefault();
-    if (typeof cropper !== "undefined") {
-      await setCropData(cropper.getCroppedCanvas().toDataURL());
-      //console.log(cropper.getCroppedCanvas().toDataURL())
-        let imagedata = await cropper.getCroppedCanvas().toDataURL()
-        console.log(imagedata)
-        // アップロード処理
-        console.log("アップロード処理");
-        const storages = app.storage();//storageを参照
-        const storageRef = storages.ref("images/users/" + currentUser.uid + "/");//どのフォルダの配下に入れるか
-        const imagesRef = storageRef.child("profilePicture.png");//ファイル名
+    const defaultSrc =
+          "https://raw.githubusercontent.com/roadmanfong/react-cropper/master/example/img/child.jpg";
 
-        console.log("ファイルをアップする行為");
-        //const upLoadTask = imagesRef.put(imagedata);
-        const upLoadTask = imagesRef.putString(imagedata, 'data_url');
+    const [image, setImage] = useState(defaultSrc);
+    const [cropper, setCropper] = useState();
+    const getCropData  = async(e) => {
+        e.preventDefault();
+        if (typeof cropper !== "undefined") {
+        //console.log(cropper.getCroppedCanvas().toDataURL())
+            let imagedata = await cropper.getCroppedCanvas().toDataURL()
+            console.log(imagedata)
+            // アップロード処理
+            console.log("アップロード処理");
+            const storages = app.storage();//storageを参照
+            const storageRef = storages.ref("images/users/" + currentUser.uid + "/");//どのフォルダの配下に入れるか
+            const imagesRef = storageRef.child("profilePicture.png");//ファイル名
 
-
-        console.log("タスク実行前");
-
-        upLoadTask.on(
-            "state_changed",
-            (snapshot) => {
-                console.log("snapshot", snapshot);
-            },
-            (error) => {
-                console.log("err", error);
-            },
-            () => {
-                upLoadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {
-                //console.log("File available at", downloadURL);
-                const url = new URL(downloadURL)
-                console.log(url.href + url.pathname + "?alt=media")
-                dispatch({
-                    type: "setPhotoURL",
-                    payload: url.href + url.pathname + "?alt=media"
-                });
-                });
-            }
-        );
+            console.log("ファイルをアップする行為");
+            //const upLoadTask = imagesRef.put(imagedata);
+            const upLoadTask = imagesRef.putString(imagedata, 'data_url');
 
 
-    }
-  };
+            console.log("タスク実行前");
 
-    
+            upLoadTask.on(
+                "state_changed",
+                (snapshot) => {
+                    console.log("snapshot", snapshot);
+                },
+                (error) => {
+                    console.log("err", error);
+                },
+                () => {
+                    upLoadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {
+                    //console.log("File available at", downloadURL);
+                    const url = new URL(downloadURL)
+                    console.log(url.href + url.pathname + "?alt=media")
+                    dispatch({
+                        type: "setPhotoURL",
+                        payload: url.href + url.pathname + "?alt=media"
+                        });
+                    });
+                    setOpen(false);
+                }
+            );
+        }
+    };
+
+    const handleClose = () => {setOpen(false);};
     //あとで原因を調べる。わからない場合は別のツールを検討する
     formState.isSubmitted = false   //一回submittedになるとレンダリングが遅くなり、変な動きするので強制的にfalseにする
 
@@ -476,32 +483,68 @@ const UpdateProfile = () => {
                         <label htmlFor="contained-button-file">
                             {state.photoURL && <div><img className={classes.imagephotoURL} src={state.photoURL} alt="photoURL" /><Fab component="span" className={classes.button}><AddPhotoAlternateIcon /></Fab></div>}
                             {!state.photoURL && <>アバターが登録されていません{' '}{' '}{' '}<Fab component="span" className={classes.button}><AddPhotoAlternateIcon /></Fab></>}
-                            
                         </label>
                     </Paper>
-                    <input type="file" onChange={onChange} />
-                    <Cropper
-                        style={{ height: 400, width: "100%" }}
-                        initialAspectRatio={1}
-                        preview=".img-preview"
-                        src={image}
-                        viewMode={1}
-                        guides={true}
-                        minCropBoxHeight={10}
-                        minCropBoxWidth={10}
-                        background={false}
-                        responsive={true}
-                        autoCropArea={1}
-                        checkOrientation={false} // https://github.com/fengyuanchen/cropperjs/issues/671
-                        onInitialized={(instance) => {
-                            setCropper(instance);
+
+                    <Modal
+                        aria-labelledby="transition-modal-title"
+                        aria-describedby="transition-modal-description"
+                        className={classes.modal}
+                        open={open}
+                        onClose={handleClose}
+                        closeAfterTransition
+                        BackdropComponent={Backdrop}
+                        BackdropProps={{
+                        timeout: 500,
                         }}
-                    />
-                    <button style={{ float: "right" }} onClick={getCropData}>
-                        選択範囲で反映する
-                    </button>
+                    >
 
+                        <Fade in={open}>
+                        <div className={classes.paper}>
+                            <h2 id="transition-modal-title">画像の切り抜き</h2>
+                            <Cropper
+                                style={{ height: 400, width: "100%" }}
+                                initialAspectRatio={1}
+                                preview=".img-preview"
+                                src={image}
+                                viewMode={1}
+                                guides={true}
+                                minCropBoxHeight={10}
+                                minCropBoxWidth={10}
+                                background={false}
+                                responsive={true}
+                                autoCropArea={1}
+                                checkOrientation={false} // https://github.com/fengyuanchen/cropperjs/issues/671
+                                onInitialized={(instance) => {
+                                    setCropper(instance);
+                                }}
+                            />
+                            <Button
+                                variant="contained"
+                                size="large"
+                                fullWidth
+                                color="primary"
+                                className={classes.updateProfileBtn}
+                                onClick={getCropData}
+                            >
+                                選択範囲で反映
+                            </Button>
 
+                            <Button
+                                variant="contained"
+                                size="large"
+                                fullWidth
+                                className={classes.updateProfileBtn}
+                                onClick={handleClose}
+                            >
+                                キャンセル
+                            </Button>
+
+                        </div>
+                        </Fade>
+                    </Modal>
+
+                    
                     <Button
                         variant="contained"
                         size="large"
