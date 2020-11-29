@@ -13,6 +13,8 @@ import { useAuth } from "../contexts/AuthContext"
 import { Link , useHistory} from "react-router-dom"
 import AddPhotoAlternateIcon from "@material-ui/icons/AddPhotoAlternate";
 import app  from "../firebase"
+import Cropper from "react-cropper";
+import "cropperjs/dist/cropper.css";
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -317,6 +319,37 @@ const UpdateProfile = () => {
         const image = event.target.files[0];
         //setImage(image);
 
+
+    };
+
+    const defaultSrc =
+          "https://raw.githubusercontent.com/roadmanfong/react-cropper/master/example/img/child.jpg";
+
+    const [image, setImage] = useState(defaultSrc);
+    const [cropData, setCropData] = useState("#");
+    const [cropper, setCropper] = useState();
+    const onChange = (e) => {
+        e.preventDefault();
+        let files;
+        if (e.dataTransfer) {
+             files = e.dataTransfer.files;
+        } else if (e.target) {
+         files = e.target.files;
+        }
+        const reader = new FileReader();
+        reader.onload = () => {
+        setImage(reader.result);
+    };
+        reader.readAsDataURL(files[0]);
+  };
+
+  const getCropData  = async(e) => {
+    e.preventDefault();
+    if (typeof cropper !== "undefined") {
+      await setCropData(cropper.getCroppedCanvas().toDataURL());
+      //console.log(cropper.getCroppedCanvas().toDataURL())
+        let imagedata = await cropper.getCroppedCanvas().toDataURL()
+        console.log(imagedata)
         // アップロード処理
         console.log("アップロード処理");
         const storages = app.storage();//storageを参照
@@ -324,7 +357,9 @@ const UpdateProfile = () => {
         const imagesRef = storageRef.child("profilePicture.png");//ファイル名
 
         console.log("ファイルをアップする行為");
-        const upLoadTask = imagesRef.put(image);
+        //const upLoadTask = imagesRef.put(imagedata);
+        const upLoadTask = imagesRef.putString(imagedata, 'data_url');
+
 
         console.log("タスク実行前");
 
@@ -348,8 +383,12 @@ const UpdateProfile = () => {
                 });
             }
         );
-    };
 
+
+    }
+  };
+
+    
     //あとで原因を調べる。わからない場合は別のツールを検討する
     formState.isSubmitted = false   //一回submittedになるとレンダリングが遅くなり、変な動きするので強制的にfalseにする
 
@@ -440,6 +479,28 @@ const UpdateProfile = () => {
                             
                         </label>
                     </Paper>
+                    <input type="file" onChange={onChange} />
+                    <Cropper
+                        style={{ height: 400, width: "100%" }}
+                        initialAspectRatio={1}
+                        preview=".img-preview"
+                        src={image}
+                        viewMode={1}
+                        guides={true}
+                        minCropBoxHeight={10}
+                        minCropBoxWidth={10}
+                        background={false}
+                        responsive={true}
+                        autoCropArea={1}
+                        checkOrientation={false} // https://github.com/fengyuanchen/cropperjs/issues/671
+                        onInitialized={(instance) => {
+                            setCropper(instance);
+                        }}
+                    />
+                    <button style={{ float: "right" }} onClick={getCropData}>
+                        選択範囲で反映する
+                    </button>
+
 
                     <Button
                         variant="contained"
