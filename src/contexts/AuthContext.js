@@ -59,7 +59,12 @@ export function AuthProvider({ children }) {
 
     function updateEmail(email) {
       return currentUser.updateEmail(email)
-    }    
+    }
+    function updateProfile(profiledata) {
+      return currentUser.updateProfile(profiledata)
+    }
+
+    
     const value = {
         currentUser,
         signup,
@@ -68,7 +73,8 @@ export function AuthProvider({ children }) {
         resetPassword,
         sendEmailVerification,
         updatePassword,
-        updateEmail
+        updateEmail,
+        updateProfile
     }
 
     useEffect(() => {

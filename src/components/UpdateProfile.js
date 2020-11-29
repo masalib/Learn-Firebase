@@ -31,25 +31,34 @@ type State = {
   username: string,
   password:  string,
   passwordconfirm:  string,
+  displayName:  string,
   isButtonDisabled: boolean,
   helperText: string,
   isError: boolean
 };
 
 
-const initialState: State = {
+let initialState: State = {
   username: "",
   password: "",
   passwordconfirm: "",
+  displayName: "",
   isButtonDisabled: true,
   helperText: "",
   isError: false
 };
 
+let updatProfileData = {
+    displayName: "",
+    photoURL: ""
+  };
+  
+
 type Action =
   | { type: "setUsername", payload: string }
   | { type: "setPassword", payload: string }
   | { type: "setPasswordConfirm", payload: string }
+  | { type: "setDisplayName", payload: string }
   | { type: "setIsButtonDisabled", payload: boolean }
   | { type: "signupSuccess", payload: string }
   | { type: "signupFailed", payload: string }
@@ -71,6 +80,11 @@ const reducer = (state: State, action: Action): State => {
     return {
         ...state,
         passwordconfirm: action.payload
+    };
+    case "setDisplayName":
+    return {
+        ...state,
+        displayName: action.payload
     };
     case "setIsButtonDisabled":
       return {
@@ -100,11 +114,22 @@ const reducer = (state: State, action: Action): State => {
 };
 
 const UpdateProfile = () => {
-    const { currentUser, updatePassword, updateEmail,sendEmailVerification} = useAuth()
-    const classes = useStyles();
-    //const email = currentUser.email
-    const [state, dispatch] = useReducer(reducer, {...initialState, username:currentUser.email});
+    const { 
+        currentUser,
+        updatePassword,
+        updateEmail,
+        sendEmailVerification,
+        updateProfile
+    } = useAuth()   //Firebaseの共通変数と変更などの関数
 
+    const classes = useStyles();//Material-ui
+
+    //NULLだと@material-uiのButtonでエラーになったのでvalueに値をいれる
+    currentUser.displayName ? initialState = {...initialState,displayName:currentUser.displayName} : initialState = {...initialState,displayName:""}
+    //...initialStateはinitialStateの配列です。「,username:currentUser.email,displayName:currentUser.email」はinitialStateのusernameとdisplayNameだけを更新しています
+    initialState = {...initialState,username:currentUser.email}
+
+    const [state, dispatch] = useReducer(reducer, initialState);
     const [error, setError] = useState("")
     const [successMessage, setSuccessMessage] = useState("")
     const { register, handleSubmit, errors ,formState} = useForm();
@@ -154,6 +179,11 @@ const UpdateProfile = () => {
             if (state.password) {
                 console.log("updatePassword")
                 promises.push(updatePassword(state.password))
+            }
+
+            if (state.displayName !== currentUser.displayName) {
+                updatProfileData = {...updatProfileData,displayName:state.displayName}
+                promises.push(updateProfile(updatProfileData))
             }
 
             Promise.all(promises)
@@ -234,6 +264,14 @@ const UpdateProfile = () => {
         });
     };
 
+    const handleDisplayNameChange: React.ChangeEventHandler<HTMLInputElement> = (event) => {
+        dispatch({
+            type: "setDisplayName",
+            payload: event.target.value
+        });
+    };
+
+
     async function handlesendEmailVerification() {
         setError("")
         try {
@@ -302,6 +340,25 @@ const UpdateProfile = () => {
                         onChange={handlePasswordConfirmChange}
                         inputRef={register}
                     />
+                    <TextField
+                        error={state.isError}
+                        fullWidth
+                        id="displayName"
+                        name="displayName"
+                        type="text"
+                        label="表示名"
+                        placeholder="ハンドル名を入力してください"
+                        margin="normal"
+                        value={state.displayName}
+                        onChange={handleDisplayNameChange}
+                        inputRef={register({ required: true, minLength: 4 })}
+                    />
+                    {errors.displayName?.type === "required" &&
+                    <div style={{ color: "red" }}>表示名を入力してください</div>}
+                    {errors.displayName?.type === "minLength" &&
+                    <div style={{ color: "red" }}>表示名は4文字以上で入力してください</div>}
+
+
                     <Button
                         variant="contained"
                         size="large"

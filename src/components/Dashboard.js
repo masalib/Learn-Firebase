@@ -50,7 +50,14 @@ const Dashboard = () => {
             Dashboard
             テスト用のリンク（あとで治す）
             {error && <div style={{ color: "red" }}>{error}</div>}
-            <strong>Email:</strong> {currentUser.email}
+            <div>
+              <strong>Email:</strong> {currentUser.email}
+            </div>
+            <div>
+              <strong>ハンドル名:</strong> {currentUser.displayName}
+            </div>
+
+
 
             <h2>
                 <Link to="/UpdateProfile">UpdateProfile</Link>
