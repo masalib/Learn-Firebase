@@ -1,6 +1,7 @@
 import firebase from "firebase/app"
 import "firebase/auth"
 import "firebase/storage";
+import 'firebase/firestore';
 
 const app = firebase.initializeApp({
     apiKey: process.env.REACT_APP_APIKEY,
@@ -13,7 +14,28 @@ const app = firebase.initializeApp({
     measurementId: process.env.REACT_APP_MEASUREMENT_ID
 });
 
-export const auth = app.auth()
-export const storage = app.storage();
+var db_obj = firebase.firestore();
+if (process.env.REACT_APP_HOST === "localhost") {
+  db_obj.useEmulator("localhost", 8080);
+  console.log("useEmulator:firestore")
+}
+
+var auth_obj = firebase.auth();
+if (process.env.REACT_APP_HOST === "localhost") {
+    console.log("useEmulator:auth")
+    auth_obj.useEmulator("http://localhost:9099")
+} 
+
+var storage_obj = firebase.storage();
+/* storage_obj.useEmulator is not a functionというエラーがでたのでコメントアウト
+if (process.env.REACT_APP_HOST === "localhost") {
+    console.log("useEmulator:storage")
+    storage_obj.useEmulator("http://localhost:9099")
+}
+*/
+
+export const db = db_obj;
+export const auth = auth_obj;
+export const storage = storage_obj;
 export default app
 
