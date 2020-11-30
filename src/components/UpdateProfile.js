@@ -9,7 +9,8 @@ import {
     Fab,
     Modal,
     Backdrop,
-    Fade
+    Fade,
+    CircularProgress
   } from '@material-ui/core';
 
 import { useAuth } from "../contexts/AuthContext"
@@ -34,7 +35,7 @@ const useStyles = makeStyles((theme: Theme) =>
     imagephotoURL: {
         width: "80%",
         margin: '10px',
-
+        borderRadius: '50%'
     },
     inputFile: {
         display: "none"
@@ -52,7 +53,12 @@ const useStyles = makeStyles((theme: Theme) =>
         border: '2px solid #000',
         boxShadow: theme.shadows[5],
         padding: theme.spacing(2, 4, 3),
-      },
+    },
+    inputFilebtn: {
+        position: "absolute",
+        top: "80%",
+        left: "55%",
+    },
 
 
   })
@@ -174,7 +180,12 @@ const UpdateProfile = () => {
     const [state, dispatch] = useReducer(reducer, initialState);
     const [error, setError] = useState("")
     const [successMessage, setSuccessMessage] = useState("")
+    const defaultSrc =  "";
+    const [image, setImage] = useState(defaultSrc);
+    const [cropper, setCropper] = useState();
     const [open, setOpen] = React.useState(false);      //モーダル用の変数
+    const [openCircularProgress, setOpenCircularProgress] = React.useState(false);      //処理中みたいモーダル
+
     const { register, handleSubmit, errors ,formState} = useForm();
     const history = useHistory()
 
@@ -210,6 +221,7 @@ const UpdateProfile = () => {
                 type: "setIsButtonDisabled",
                 payload: true
             });
+            setOpenCircularProgress(true);
 
             //処理の初期化
             const promises = []
@@ -235,6 +247,7 @@ const UpdateProfile = () => {
             Promise.all(promises)
             .then(() => {
 
+                setOpenCircularProgress(false);
                 setSuccessMessage("プロフィールを更新しました。ダッシュボードにリダレクトします")
                 //ボタンの有効化
                 dispatch({
@@ -250,7 +263,7 @@ const UpdateProfile = () => {
             })
             .catch((e) => {
                 console.log(e)
-
+                setOpenCircularProgress(false);
                 switch (e.code) {
                     case "auth/network-request-failed":
                         setError("通信がエラーになったのか、またはタイムアウトになりました。通信環境がいい所で再度やり直してください。");
@@ -331,27 +344,31 @@ const UpdateProfile = () => {
       }
 
     const handleImage = e => {
-        //const image = e.target.files[0];
-        e.preventDefault();
-        let files;
-        if (e.dataTransfer) {
-             files = e.dataTransfer.files;
-        } else if (e.target) {
-         files = e.target.files;
+
+        try {
+            e.preventDefault();
+            let files;
+            if (e.dataTransfer) {
+                files = e.dataTransfer.files;
+            } else if (e.target) {
+                files = e.target.files;
+            }
+            const reader = new FileReader();
+            reader.onload = () => {
+                setImage(reader.result);
+            };
+            reader.readAsDataURL(files[0]);
+            setOpen(true)
+            e.target.value = null;//ファイル選択された内容をクリアする（クリアしないと同じファイルが編集できない）
+    
+        } catch (e){
+            e.target.value = null;
+            setError("画像の切り取りをキャンセルまたは失敗しました")
+            setOpen(false)
         }
-        const reader = new FileReader();
-        reader.onload = () => {
-            setImage(reader.result);
-        };
-        reader.readAsDataURL(files[0]);
-        setOpen(true)
+
     };
 
-    const defaultSrc =
-          "https://raw.githubusercontent.com/roadmanfong/react-cropper/master/example/img/child.jpg";
-
-    const [image, setImage] = useState(defaultSrc);
-    const [cropper, setCropper] = useState();
     const getCropData  = async(e) => {
         e.preventDefault();
         if (typeof cropper !== "undefined") {
@@ -370,7 +387,7 @@ const UpdateProfile = () => {
 
 
             console.log("タスク実行前");
-
+            setOpenCircularProgress(true);
             upLoadTask.on(
                 "state_changed",
                 (snapshot) => {
@@ -378,6 +395,8 @@ const UpdateProfile = () => {
                 },
                 (error) => {
                     console.log("err", error);
+                    setError("ファイルのアップロードに失敗しました")
+                    setOpenCircularProgress(false);
                 },
                 () => {
                     upLoadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {
@@ -390,15 +409,20 @@ const UpdateProfile = () => {
                         });
                     });
                     setOpen(false);
+                    setOpenCircularProgress(false);
                 }
             );
         }
     };
 
     const handleClose = () => {setOpen(false);};
+    const handleCircularProgressClose = () => {setOpenCircularProgress(false);};
+
     //あとで原因を調べる。わからない場合は別のツールを検討する
     formState.isSubmitted = false   //一回submittedになるとレンダリングが遅くなり、変な動きするので強制的にfalseにする
 
+
+    
     return (
         <div className={classes.container} >
             <Typography variant="h4" align="center" component="h1" gutterBottom>
@@ -471,7 +495,24 @@ const UpdateProfile = () => {
 
 
                     <Typography className={classes.subtitle2} variant="subtitle2">アバター</Typography>
-                    <Paper elevation={1} justify="center">
+
+                    {state.photoURL && 
+                    <>
+                    <div style={{ textAlign: "center" }}>
+                        <img className={classes.imagephotoURL} src={state.photoURL} alt="photoURL" />
+                    </div>
+                    <div style={{ textAlign: "center", marginTop:"-30px" }}>
+                        <label htmlFor="contained-button-file"><Fab component="span" className={classes.button}><AddPhotoAlternateIcon /></Fab></label>
+                    </div>
+                    </>
+                    }
+
+                    {!state.photoURL && 
+                        <label htmlFor="contained-button-file">
+                            <>アバターが登録されていません{' '}{' '}{' '}<Fab component="span" className={classes.button}><AddPhotoAlternateIcon /></Fab></>
+                        </label>
+                    }
+
                         <input
                             accept="image/*"
                             className={classes.inputFile}
@@ -480,11 +521,6 @@ const UpdateProfile = () => {
                             type="file"
                             onChange={handleImage}
                         />
-                        <label htmlFor="contained-button-file">
-                            {state.photoURL && <div><img className={classes.imagephotoURL} src={state.photoURL} alt="photoURL" /><Fab component="span" className={classes.button}><AddPhotoAlternateIcon /></Fab></div>}
-                            {!state.photoURL && <>アバターが登録されていません{' '}{' '}{' '}<Fab component="span" className={classes.button}><AddPhotoAlternateIcon /></Fab></>}
-                        </label>
-                    </Paper>
 
                     <Modal
                         aria-labelledby="transition-modal-title"
@@ -499,12 +535,12 @@ const UpdateProfile = () => {
                         }}
                     >
 
-                        <Fade in={open}>
                         <div className={classes.paper}>
                             <h2 id="transition-modal-title">画像の切り抜き</h2>
                             <Cropper
                                 style={{ height: 400, width: "100%" }}
                                 initialAspectRatio={1}
+                                aspectRatio={1}
                                 preview=".img-preview"
                                 src={image}
                                 viewMode={1}
@@ -541,10 +577,28 @@ const UpdateProfile = () => {
                             </Button>
 
                         </div>
-                        </Fade>
                     </Modal>
 
-                    
+                    <Modal
+                        className={classes.modal}
+                        open={openCircularProgress}
+                        onClose={handleCircularProgressClose}
+                        closeAfterTransition
+                        BackdropComponent={Backdrop}
+                        BackdropProps={{
+                        timeout: 500,
+                        }}
+                    >
+                        
+                        <div className={classes.paper} style={{ textAlign: "center" }} >
+                            <div>現在処理中です。</div>
+                            <CircularProgress />    
+                        </div>
+                        
+                    </Modal>
+
+
+
                     <Button
                         variant="contained"
                         size="large"
