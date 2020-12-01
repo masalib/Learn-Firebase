@@ -18,6 +18,7 @@ import UpdateProfile  from "./UpdateProfile"
 
 //テスト用なのであとで消す
 import UpLoadTest  from "./UpLoadTest"
+import {Create as screensCreate }  from "./screens/Create"
 
 
 function App() {
@@ -31,9 +32,14 @@ function App() {
           <Route path="/login" component={Login} />
           <Route path="/forgotPassword" component={ForgotPassword} />
 
+
+
           <AuthFirebaseRoute path="/dashboard" component={Dashboard} />
           <AuthFirebaseRoute path="/upLoadTest" component={UpLoadTest} />
           <AuthFirebaseRoute path="/UpdateProfile" component={UpdateProfile} />
+
+          <Route path="/screens/create" component={screensCreate} />
+
 
         </Switch>
       </AuthProvider>
