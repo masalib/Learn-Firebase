@@ -93,7 +93,7 @@ const reducer = (state: State, action: Action): State => {
 };
 
 
-export const Create = (props) => {
+export const Edit = (props) => {
 
     //更新時の処理
     const docId  = props.match.params.uid   //画面からわたってきたパラメータ

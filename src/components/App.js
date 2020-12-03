@@ -18,7 +18,8 @@ import UpdateProfile  from "./UpdateProfile"
 
 //テスト用なのであとで消す
 import UpLoadTest  from "./UpLoadTest"
-import {Create as screensCreate }  from "./screens/Create"
+import {Index as screensIndex }  from "./screens/Index"
+import {Edit as screensEdit }  from "./screens/Edit"
 
 
 function App() {
@@ -38,7 +39,10 @@ function App() {
           <AuthFirebaseRoute path="/upLoadTest" component={UpLoadTest} />
           <AuthFirebaseRoute path="/UpdateProfile" component={UpdateProfile} />
 
-          <Route path="/screens/create" component={screensCreate} />
+          <Route path="/screens/edit" component={screensEdit} />
+          <Route path="/screens/index" component={screensIndex} />
+          <Route path="/screens/edit/:uid" component={screensEdit} />
+
 
 
         </Switch>

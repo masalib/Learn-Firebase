@@ -14,8 +14,12 @@ const Home = () => {
                 <Link to="/signup">signup</Link>
             </h2>
             <h2>
-                <Link to="/screens/create">screens/create</Link>
+                <Link to="/screens/edit">screensの新規作成</Link>
             </h2>
+            <h2>
+                <Link to="/screens/index">screensの一覧</Link>
+            </h2>
+
 
             <h2>
                 <Link to="/forgotPassword">forgotPassword</Link>
