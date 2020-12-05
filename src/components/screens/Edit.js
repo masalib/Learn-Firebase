@@ -96,8 +96,7 @@ const reducer = (state: State, action: Action): State => {
 export const Edit = (props) => {
 
     //更新時の処理
-    const docId  = props.match.params.uid   //画面からわたってきたパラメータ
-
+    const docId  = props.match.params.docId   //画面からわたってきたパラメータ
 
     const classes = useStyles();//Material-ui
     const [state, dispatch] = useReducer(reducer, initialState);
@@ -136,7 +135,7 @@ export const Edit = (props) => {
         fetchData();
     },[docId]);
 
-    async function handleCreate (data) {  //react-hook-formを導入したためevent -> dataに変更
+    async function handleCreate () {  //react-hook-formを導入したためevent -> dataに変更
         const docId = db.collection("members").doc().id;
 
         let timestamp = firebase.firestore.FieldValue.serverTimestamp()
@@ -153,11 +152,9 @@ export const Edit = (props) => {
             console.log("リダレクト処理")
             history.push("/screens/index")
         },2000);        
-        //登録後、Topに移動
-        //this.props.history.push("/screens/");
     }
 
-    async function handleUpdate (data) {  //react-hook-formを導入したためevent -> dataに変更
+    async function handleUpdate () {  //react-hook-formを導入したためevent -> dataに変更
         console.log("update proc start")
         setSuccessMessage("")
         setError("")

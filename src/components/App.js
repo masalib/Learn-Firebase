@@ -39,9 +39,9 @@ function App() {
           <AuthFirebaseRoute path="/upLoadTest" component={UpLoadTest} />
           <AuthFirebaseRoute path="/UpdateProfile" component={UpdateProfile} />
 
-          <Route path="/screens/edit" component={screensEdit} />
           <Route path="/screens/index" component={screensIndex} />
-          <Route path="/screens/edit/:uid" component={screensEdit} />
+          <Route path="/screens/edit/:docId" component={screensEdit} />
+          <Route path="/screens/edit" component={screensEdit} />
 
 
 
