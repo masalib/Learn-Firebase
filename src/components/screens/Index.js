@@ -10,9 +10,14 @@ import {
     TableHead,		
     TableRow,		
     Paper,			
+    Fab,
   } from '@material-ui/core';
 import { Link } from "react-router-dom"
 import moment from 'moment';
+import {
+    NavigateBefore,
+    NavigateNext
+ } from "@material-ui/icons";
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -27,10 +32,14 @@ const useStyles = makeStyles((theme: Theme) =>
         maxWidth: 960
 
     },
+    largeIcon: {
+        width: 60,
+        height: 60,
+    },
   })
 );
 
-
+const LIMIT_COUNT = 10
 
 export const Index = () => {
 
@@ -39,168 +48,134 @@ export const Index = () => {
     const classes = useStyles();//Material-ui
     //const history = useHistory()
     const [list, setList] = useState([])
+    const [firstRecord, setFirstRecord] = useState()
+    const [lastRecord, setLastRecord] = useState()
+    const [currentfirstRecord, setCurrentFirstRecord] = useState()
+    const [currentlastRecord, setCurrentLastRecord] = useState()
+    const [hasPreviousPage, sethasPreviousPage] = useState()
+    const [hasNextPage, sethasNextPage] = useState()
+
+    useEffect(() => {
+        if (lastRecord && list) {
+            if (list.length > 0 ){
+                sethasNextPage(true)
+                list.forEach((item) => {
+                    //console.log("useEffect:list.item", item.docId)
+                    if ( item.docId === lastRecord.docId){
+                        console.log("useEffect:lastRecord _ari", lastRecord)
+                        sethasNextPage(false)
+                    }
+                })
+                //最後のレコードを取得する
+                setCurrentLastRecord(list.slice(-1)[0]);
+            }
+        }
+
+        if (firstRecord && list) {
+            if (list.length > 0 ){
+                //console.log("useEffect:list",list)
+                //console.log("useEffect:firstRecord",firstRecord)
+                sethasPreviousPage(true)
+                list.forEach((item) => {
+                    //console.log("useEffect:list.item", item.docId)
+                    if ( item.docId === firstRecord.docId){
+                        console.log("useEffect:firstRecord _ari", firstRecord)
+                        sethasPreviousPage(false)
+                    }
+                })
+            }
+            //最初のレコードを取得する
+            setCurrentFirstRecord(list[0]);
+
+        }
+    },[firstRecord,lastRecord,list]);
+
 
     useEffect(() => {
          async function fetchData() { // featchDataという関数を定義し、それにasyncをつける
 
-            /*複数の条件
-            const collectionRef = db.collection("members")
-            var query = await collectionRef.where("email", "==", "masalib@gmail.com").where("displayName", ">=", "masaddd").get();
-            const result = query.docs.map(doc => doc.data());
-            console.log(result)
-            //indexを作っていないと => FirebaseError: The query requires an index. You can create it hereと表示される
-            */
-
-            /* like文
-            const keyword = "masa";
-            const query = await db.collection("members").orderBy("displayName").startAt(keyword).endAt(keyword + '\uf8ff').get();
-            const result = query.docs.map(doc => doc.data());
-            console.log(result);
-            */
-
-            /*同じカラムに条件 test1
-            const collectionRef = db.collection("members")
-            var query = await collectionRef.where("email", "<=", "masalib@gmail.com").where("email", ">=", "masalib@gmail.com").get();
-            const result = query.docs.map(doc => doc.data());
-            console.log(result)
-            */
-
-            /*同じカラムに条件 test2
-            const collectionRef = db.collection("members")
-            var query = await collectionRef.where("email", "!=", "xxxxmasalib@gmail.com").where("email", "==", "masalib@gmail.com").get();
-            const result = query.docs.map(doc => doc.data());
-            console.log(result)
-            */
-
-            /*Whereとorderbyが違う場合
-            const collectionRef = db.collection("members")
-            var query = await collectionRef.where("email", "==", "masalib@gmail.com").get();
-            const result = query.docs.map(doc => doc.data());
-            //sort処理
-            result.sort(function(a,b){
-                if(a.createdAt>b.createdAt) return -1;
-                if(a.createdAt < b.createdAt) return 1;
-                return 0;
-            });
-            console.log(result)
-            */
-
-            /* offset文は動かない・・・https://googleapis.dev/nodejs/firestore/latest/Query.html#offset webのモジュールにはないのか？？
-
-            const query = await db.collection("members")
-                    .orderBy('createdAt', 'desc')
-                    .limit(2)
-                    .offset(3)
-                    .get();
-            const result = query.docs.map(doc => doc.data());
-            console.log(result);
-            => TypeError: _firebase__WEBPACK_IMPORTED_MODULE_2__.db.collection(...).orderBy(...).limit(...).offset is not a function
-            */
-
-            /* 次ページ取得処理
-            //startAfter('ooOG2p7FvaqghvXGzndX')は取得したデータの最後のデータを設定する事で次のページのデータを取得する事ができる
-            const query = await db.collection("members")
-                    .orderBy('docId', 'desc')
-                    .limit(2)
-                    .startAfter('KQBNkui64BK2FuITUgcM')
-                    .get();
-            const result = query.docs.map(doc => doc.data());
-            console.log(result);
-            */
-
-
-            /*
-            // 前ページ取得処理 test1  失敗策
-            //startAfter('ooOG2p7FvaqghvXGzndX')は取得したデータの最後のデータを設定する事で次のページのデータを取得する事ができる
-            const query = await db.collection("members")
-                    .orderBy('docId', 'desc')
-                    .limit(2)
-                    .endAt('Pe2YFWvdhXXXskjFw1Qr')
-                    .get();
-            const result = query.docs.map(doc => doc.data());
-            console.log(result);
-            //例
-            //　1,2,3,4,5,6,7,8というデータがある    
-            //　現在表示しているのは5,6だった場合に
-            // .endAt(5)にすると自分のイメージだと 3,4のデータ取得されると思っていたが
-            // 実際には1,2のデータ取得された。使えない
-            */
-
-            /*
-            // 前ページ取得処理　test2  
-            //startAfter('ooOG2p7FvaqghvXGzndX')は取得したデータの最初のデータを設定する事で前のページのデータを取得する事ができる
-            const query = await db.collection("members")
-                    .orderBy('docId' )
-                    .limit(2)
-                    .startAfter('Pe2YFWvdhXXXskjFw1Qr')
-                    .get();
-            console.log(query.size);
-            const result = query.docs.map(doc => doc.data());
-            //sort処理
-            result.sort(function(a,b){
-                if(a.docId>b.docId) return -1;
-                if(a.docId < b.docId) return 1;
-                return 0;
-            });
-            console.log(result);
-            */
-
-            /*
-            //limitToLast(1)このレコードが来たら最後のページになる、最初はないので自前で組む
-            const query = await db.collection("members")
-                    .orderBy('docId', 'desc')
-                    .limitToLast(1);
-            console.log(query);
-            const queryget = await query.get();       
-            const result = queryget.docs.map(doc => doc.data());
-            console.log(result);
-            */
-
-
-
-            /*
-            const query = await db.collection("members")
-                    .limit(2)
-                    .offset(2)
-                    .get();
-            const result = query.docs.map(doc => doc.data());
-            console.log(result);
-            */
-
-            //var query = await collectionRef.where("docId", "!=", "0w9ZviC6D60yR6QVcEjv").where("docId", "!=", "ooOG2p7FvaqghvXGzndX").get();
-            // => Unhandled Rejection (FirebaseError): Invalid query. You cannot use more than one '!=' filter.
-            //var query = await collectionRef.where("email", "!=", "masalib@gmail.com").where("displayName", "==", "masaddd").get();
-            //The query requires an index. You can create it here https://firebase.google.com/docs/firestore/query-data/indexing?hl=ja
-            /*    
-
-            var query = await collectionRef.where("email", "==", "xxxmasalib@gmail.com").where("displayName", "==", "masaddd").get();
-            const result = query.docs.map(doc => doc.data());
-            sort処理
-            result.sort(function(a,b){
-                if(a.createdAt>b.createdAt) return -1;
-                if(a.createdAt < b.createdAt) return 1;
-                return 0;
-            });
-            console.log(result)
-            */
+            //最初のページを取得する
             const colRef = db.collection("members")
-            .orderBy('docId', 'desc')
-            .limit(10);
+            .orderBy('createdAt', 'desc')
+            .limit(LIMIT_COUNT);
+            console.log(colRef)
             const snapshots = await colRef.get();
-            //console.log("snapshots",snapshots)
-            //console.log("snapshots.docs",snapshots.docs)
-            //console.log("snapshots.empty",snapshots.empty)
-            //console.log("snapshots.metadata",snapshots.metadata)
-            //console.log("snapshots.query",snapshots.query)
-            //console.log("snapshots.size",snapshots.size)
-
-            const docs = snapshots.docs.map(doc => doc.data());
-            console.log(docs)
+            var docs = snapshots.docs.map(function (doc) {
+                return doc.data();
+            });
             setList(docs)
+
         }
+
+        async function initialData() { // featchDataという関数を定義し、それにasyncをつける
+            //最後のレコードをセットする
+            await db.collection("members").orderBy('createdAt', 'desc').limitToLast(1)
+            .get()
+            .then(function(querySnapshot) {
+                querySnapshot.forEach(function(doc) {
+                    setLastRecord(doc.data())
+                });
+            })
+            .catch(function(error) {
+                console.log("Error getting documents: ", error);
+            });
+            //最初のレコードをセットする
+            await db.collection("members").orderBy('createdAt', 'desc').limit(1)
+            .get()
+            .then(function(querySnapshot) {
+                querySnapshot.forEach(function(doc) {
+                    setFirstRecord(doc.data())
+                });
+            })
+            .catch(function(error) {
+                console.log("Error getting documents: ", error);
+            });
+        }
+        initialData();
         fetchData();
     },[inputRef]);
-    
+
+    async function handleNextPage () {  
+        console.log("handleNextPage")
+        //console.log("currentfirstRecord",currentfirstRecord)
+        //console.log("currentlastRecord",currentlastRecord)
+        //次のページを取得する
+        const colRef = db.collection("members")
+        .orderBy('createdAt', 'desc')
+        .limit(LIMIT_COUNT)
+        .startAfter(currentlastRecord.createdAt);
+
+        const snapshots = await colRef.get();
+        var docs = snapshots.docs.map(function (doc) {
+            return doc.data();
+        });
+        setList(docs)
+    }
+
+    async function handlePreviousPage () {  
+        console.log("handlePreviousPage")
+        //console.log("currentfirstRecord",currentfirstRecord)
+        //console.log("currentlastRecord",currentlastRecord)
+        //前のページを取得する
+        const colRef = db.collection("members")
+        .orderBy('createdAt')
+        .limit(LIMIT_COUNT)
+        .startAfter(currentfirstRecord.createdAt);
+
+        const snapshots = await colRef.get();
+        var docs = snapshots.docs.map(function (doc) {
+            return doc.data();
+        });
+        //sort処理
+        docs.sort(function(a,b){
+            if(a.createdAt>b.createdAt) return -1;
+            if(a.createdAt < b.createdAt) return 1;
+            return 0;
+        });
+        setList(docs)
+
+    }
+
     return (
         <>
             <Typography variant="h4" align="center" component="h1" gutterBottom>
@@ -220,8 +195,6 @@ export const Index = () => {
                     <TableBody>
                     {
                     list.map((item, index) => {
-                        //console.log(item)    
-                        // {item.docId}
                         return (
                             <TableRow key={item.docId}>
                                 <TableCell component="th" scope="row">
@@ -240,7 +213,12 @@ export const Index = () => {
                     </TableBody>
                 </Table>
                 </TableContainer>
-
+            <div variant="subtitle1" align="center" justify="center" component="h1" >
+                {hasPreviousPage && <><Fab component="span" className={classes.button} onClick={handlePreviousPage} ><NavigateBefore className={classes.largeIcon} color={"primary"} /></Fab>　</>}
+                {!hasPreviousPage && <><Fab component="span" className={classes.button}><NavigateBefore className={classes.largeIcon} color={"disabled"}/></Fab>　</>}
+                {hasNextPage && <><Fab component="span" className={classes.button}  onClick={handleNextPage}   ><NavigateNext className={classes.largeIcon} color={"primary"} /></Fab></>}
+                {!hasNextPage && <><Fab component="span" className={classes.button}><NavigateNext className={classes.largeIcon} color={"disabled"} /></Fab></>}
+            </div>
             <Typography className={classes.subtitle2} variant="subtitle2"><Link to="/screens/edit">新規作成</Link></Typography>
             <Typography className={classes.subtitle2} variant="subtitle2"><Link to="/">Homeに戻る</Link></Typography>
 
