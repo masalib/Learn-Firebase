@@ -7,6 +7,9 @@ import {
     Paper,
     Button,
     TextField,
+    InputLabel,
+    MenuItem,
+    Select,
   } from '@material-ui/core';
 import { Link , useHistory} from "react-router-dom"
 
@@ -49,7 +52,9 @@ const useStyles = makeStyles((theme: Theme) =>
         top: "80%",
         left: "55%",
     },
-
+    InputLabel:{
+        marginTop: '10px',
+    }
 
   })
 );
@@ -58,16 +63,19 @@ const useStyles = makeStyles((theme: Theme) =>
 type State = {
   username: string,
   displayName:  string,
+  departmentId:  string,
 };
 
 let initialState: State = {
   username: "",
   displayName: "",
+  departmentId: "",
 };
 
 type Action =
   | { type: "setUsername", payload: string }
   | { type: "setDisplayName", payload: string }
+  | { type: "setDepartment", payload: string }
   | { type: "setIsError", payload: boolean };
 
 const reducer = (state: State, action: Action): State => {
@@ -82,6 +90,12 @@ const reducer = (state: State, action: Action): State => {
         ...state,
         displayName: action.payload
     };
+    case "setDepartment":
+    return {
+        ...state,
+        departmentId: action.payload + ""
+    };
+
     case "setIsError":
       return {
         ...state,
@@ -104,9 +118,9 @@ export const Edit = (props) => {
     const [successMessage, setSuccessMessage] = useState("")
     const { register, handleSubmit, errors ,formState} = useForm();
     const history = useHistory()
-   
+    const [departmentList, setDepartmentList] = useState([])
     useEffect(() => {
-         async function fetchData() { 
+        async function fetchData() { 
             console.log("render")
             console.log(docId)
             if (docId){
@@ -115,13 +129,17 @@ export const Edit = (props) => {
                 .then(function(querySnapshot) {
                     querySnapshot.forEach(function(doc) {
                         // doc.data() is never undefined for query doc snapshots
-                         dispatch({
+                        dispatch({
                             type: "setUsername",
                             payload: doc.data().email
                         });
                         dispatch({
                             type: "setDisplayName",
                             payload: doc.data().displayName
+                        });
+                        dispatch({
+                            type: "setDepartment",
+                            payload: doc.data().departmentId 
                         });
                         console.log("データ読み込み内部のrender")
 
@@ -132,6 +150,19 @@ export const Edit = (props) => {
                 });
             }    
         }
+
+        async function departmentData() { 
+            const colRef = db.collection("departments")
+            .orderBy('departmentId');
+
+            const snapshots = await colRef.get();
+            var docs = snapshots.docs.map(function (doc) {
+                return doc.data();
+            });
+            setDepartmentList(docs)
+        }
+
+        departmentData();    //部署データ読み込み(セレクトボックスで使う方を先に読み込む)
         fetchData();
     },[docId]);
 
@@ -143,6 +174,7 @@ export const Edit = (props) => {
             docId: docId,
             displayName: state.displayName,
             email: state.username,
+            departmentId: state.departmentId,
             createdAt: timestamp,
             updatedAt: timestamp,
         });
@@ -158,11 +190,13 @@ export const Edit = (props) => {
         console.log("update proc start")
         setSuccessMessage("")
         setError("")
+        console.log("state",state)
 
         let timestamp = firebase.firestore.FieldValue.serverTimestamp()
         db.collection("members").doc(docId).update({
             displayName: state.displayName,
             email: state.username,
+            departmentId: state.departmentId,
             updatedAt: timestamp,
         });
 
@@ -202,6 +236,12 @@ export const Edit = (props) => {
         });
     };    
 
+    const handleDepartmentChange: React.ChangeEventHandler<HTMLInputElement> = (event) => {
+        dispatch({
+            type: "setDepartment",
+            payload: event.target.value
+        });
+    };
     //あとで原因を調べる。わからない場合は別のツールを検討する
     formState.isSubmitted = false   //一回submittedになるとレンダリングが遅くなり、変な動きするので強制的にfalseにする
 
@@ -248,7 +288,29 @@ export const Edit = (props) => {
                     {errors.displayName?.type === "minLength" &&
                     <div style={{ color: "red" }}>表示名は4文字以上で入力してください</div>}
 
-
+                    {departmentList && <>
+                        <InputLabel className={classes.InputLabel} id="department-select-label">部署</InputLabel>
+                        <Select
+                            fullWidth
+                            labelId="department-select-label"
+                            id="department-select"
+                            value={state.departmentId}
+                            onChange={handleDepartmentChange}
+                            defaultValue={"0001"}
+                        >
+                            {
+                                departmentList.map((item,index) => {
+                                    return (
+                                        <MenuItem key={item.departmentName} value={ item.departmentId }   >
+                                            {item.departmentName}:
+                                        </MenuItem>
+                                    )
+                                })
+                            }
+                            <MenuItem key={"9999"} value={"9999"} >未所属</MenuItem>
+                        </Select>
+                    </>
+                    }        
                     {docId && 
                     <>
                         <Button

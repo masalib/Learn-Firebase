@@ -39,7 +39,7 @@ const useStyles = makeStyles((theme: Theme) =>
   })
 );
 
-const LIMIT_COUNT = 10
+const LIMIT_COUNT = 5
 
 export const Index = () => {
 
@@ -54,7 +54,8 @@ export const Index = () => {
     const [currentlastRecord, setCurrentLastRecord] = useState()
     const [hasPreviousPage, sethasPreviousPage] = useState()
     const [hasNextPage, sethasNextPage] = useState()
-
+    const [departmentList, setDepartmentList] = useState([])//部署データ
+   
     useEffect(() => {
         if (lastRecord && list) {
             if (list.length > 0 ){
@@ -93,23 +94,52 @@ export const Index = () => {
 
     useEffect(() => {
          async function fetchData() { // featchDataという関数を定義し、それにasyncをつける
-
             //最初のページを取得する
+
+            //部署データ
+            const colDepartmentsRef = db.collection("departments")
+            .orderBy('departmentId');
+
+            //メンバーデータ
             const colRef = db.collection("members")
-            .orderBy('createdAt', 'desc')
+            .orderBy('updatedAt', 'desc')
             .limit(LIMIT_COUNT);
-            console.log(colRef)
-            const snapshots = await colRef.get();
-            var docs = snapshots.docs.map(function (doc) {
-                return doc.data();
+
+            colDepartmentsRef.get()
+            .then((docSnaps) => {
+                //const departments = docSnaps.docs;
+                var departments = docSnaps.docs.map(function (doc) {
+                    return doc.data();
+                });
+                setDepartmentList(departments)  //部署データを設定する
+
+                let departmentName = "";
+                colRef.get()
+                .then((docSnaps) => {
+                    //console.log("departmentsList" , departments)
+                    const members = docSnaps.docs.map(function (doc) {
+                        //console.log("doc.data()",doc.data())
+                        //console.log("doc.data().departmentId",doc.data().departmentId)
+
+                        departments.forEach(function(department) {
+                            //console.log("departments.departmentId",department.departmentId)
+                            if ( doc.data().departmentId === department.departmentId  ){
+                                departmentName = department.departmentName;
+                            }
+                        });
+                        //console.log(departmentName);
+                        return {...doc.data() , departmentName: departmentName};    //memberデータの配列にdepartmentNameを追加するして返す
+                    });
+                    //console.log("members",members)
+                    setList(members)
+                });
             });
-            setList(docs)
 
         }
 
         async function initialData() { // featchDataという関数を定義し、それにasyncをつける
             //最後のレコードをセットする
-            await db.collection("members").orderBy('createdAt', 'desc').limitToLast(1)
+            await db.collection("members").orderBy('updatedAt', 'desc').limitToLast(1)
             .get()
             .then(function(querySnapshot) {
                 querySnapshot.forEach(function(doc) {
@@ -120,7 +150,7 @@ export const Index = () => {
                 console.log("Error getting documents: ", error);
             });
             //最初のレコードをセットする
-            await db.collection("members").orderBy('createdAt', 'desc').limit(1)
+            await db.collection("members").orderBy('updatedAt', 'desc').limit(1)
             .get()
             .then(function(querySnapshot) {
                 querySnapshot.forEach(function(doc) {
@@ -136,40 +166,59 @@ export const Index = () => {
     },[inputRef]);
 
     async function handleNextPage () {  
-        console.log("handleNextPage")
+        //console.log("handleNextPage")
         //console.log("currentfirstRecord",currentfirstRecord)
         //console.log("currentlastRecord",currentlastRecord)
         //次のページを取得する
         const colRef = db.collection("members")
-        .orderBy('createdAt', 'desc')
+        .orderBy('updatedAt', 'desc')
         .limit(LIMIT_COUNT)
-        .startAfter(currentlastRecord.createdAt);
+        .startAfter(currentlastRecord.updatedAt);
 
         const snapshots = await colRef.get();
         var docs = snapshots.docs.map(function (doc) {
-            return doc.data();
+            let departmentName = "";
+            //console.log("doc.data().departmentId",doc.data().departmentId)
+            //console.log("doc.data()",doc.data())
+
+            departmentList.forEach(function(department) {
+                //console.log("department.departmentId",department.departmentId)
+                //console.log("departments.forEach",department.departmentName)
+                if ( doc.data().departmentId === department.departmentId  ){
+                    departmentName = department.departmentName;
+                }
+            });
+            return {...doc.data() , departmentName: departmentName};    //memberデータの配列にdepartmentNameを追加するして返す
         });
         setList(docs)
     }
 
     async function handlePreviousPage () {  
-        console.log("handlePreviousPage")
+        //console.log("handlePreviousPage")
         //console.log("currentfirstRecord",currentfirstRecord)
         //console.log("currentlastRecord",currentlastRecord)
         //前のページを取得する
         const colRef = db.collection("members")
-        .orderBy('createdAt')
+        .orderBy('updatedAt')
         .limit(LIMIT_COUNT)
-        .startAfter(currentfirstRecord.createdAt);
+        .startAfter(currentfirstRecord.updatedAt);
 
         const snapshots = await colRef.get();
         var docs = snapshots.docs.map(function (doc) {
-            return doc.data();
+
+            let departmentName = "";
+            departmentList.forEach(function(department) {
+                //console.log("departments.forEach",department.departmentName)
+                if ( doc.data().departmentId === department.departmentId  ){
+                    departmentName = department.departmentName;
+                }
+            });
+            return {...doc.data() , departmentName: departmentName};    //memberデータの配列にdepartmentNameを追加するして返す
         });
         //sort処理
         docs.sort(function(a,b){
-            if(a.createdAt>b.createdAt) return -1;
-            if(a.createdAt < b.createdAt) return 1;
+            if(a.updatedAt>b.updatedAt) return -1;
+            if(a.updatedAt < b.updatedAt) return 1;
             return 0;
         });
         setList(docs)
@@ -185,10 +234,10 @@ export const Index = () => {
                 <Table className={classes.table} aria-label="simple table">
                     <TableHead>
                         <TableRow>
-                            <TableCell>ID</TableCell>
                             <TableCell>Email</TableCell>
                             <TableCell>ハンドル名</TableCell>
-                            <TableCell>作成日</TableCell>
+                            <TableCell>部署名</TableCell>
+                            <TableCell>更新日</TableCell>
                             <TableCell>操作</TableCell>
                         </TableRow>
                     </TableHead>
@@ -197,13 +246,12 @@ export const Index = () => {
                     list.map((item, index) => {
                         return (
                             <TableRow key={item.docId}>
-                                <TableCell component="th" scope="row">
-                                    {item.docId}
-                                </TableCell>
                                 <TableCell >{item.email}</TableCell>
                                 <TableCell >{item.displayName}</TableCell> 
+                                <TableCell >{item.departmentName}</TableCell> 
+
                                 <TableCell >
-                                  { moment(item.createdAt.seconds * 1000).format('YYYY-MM-DD HH:mm:ss')}
+                                  { moment(item.updatedAt.seconds * 1000).format('YYYY-MM-DD HH:mm:ss')}
                                 </TableCell> 
                                 <TableCell ><Link to={`./edit/${item.docId}`}>編集</Link></TableCell> 
                             </TableRow>
