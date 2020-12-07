@@ -24,3 +24,25 @@ REACT_APP_MEASUREMENT_ID=
 6. 環境ファイルなので、もしプロジェクトを実行している場合（npm start)は「Ctrl + c」でstopする。restartする
 
 
+7. ファイルアップでもしファイル移動をおこなう場合はCORSの設定が必要。  
+gsutilのツールで設定する必要がある。
+
+https://firebase.google.com/docs/storage/web/download-files
+https://qiita.com/niusounds/items/383a780d46ee8551e98c
+
+gsutil cors set cors.json gs://<your-cloud-storage-bucket>
+
+# sample   
+#  REACT_APP_STORAGE_BUCKET=learn-firebase-masalib.appspot.com  
+#  gsutil cors set cors.json gs://learn-firebase-masalib.appspot.com  
+#  // => Setting CORS on gs://learn-firebase-masalib.appspot.com/...  
+
+確認は以下のコマンドでおこなえる  
+
+gsutil cors get gs://<your-cloud-storage-bucket>  
+
+# sample  
+#  REACT_APP_STORAGE_BUCKET=learn-firebase-masalib.appspot.com  
+#  gsutil cors get gs://learn-firebase-masalib.appspot.com  
+#  // => [{"maxAgeSeconds": 3600, "method": ["GET"], "origin": ["*"]}]  
+
