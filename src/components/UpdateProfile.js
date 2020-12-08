@@ -9,14 +9,14 @@ import {
     Fab,
     Modal,
     Backdrop,
-    Fade,
-    CircularProgress
+    CircularProgress,
+    InputLabel,MenuItem,Select,
   } from '@material-ui/core';
 
 import { useAuth } from "../contexts/AuthContext"
 import { Link , useHistory} from "react-router-dom"
 import AddPhotoAlternateIcon from "@material-ui/icons/AddPhotoAlternate";
-import app  from "../firebase"
+import firebase , {db} from "../firebase"
 import Cropper from "react-cropper";
 import "cropperjs/dist/cropper.css";
 
@@ -71,6 +71,8 @@ type State = {
   passwordconfirm:  string,
   displayName:  string,
   photoURL:  string,
+  uid:  string,
+  departmentId:  string,
   isButtonDisabled: boolean,
   helperText: string,
   isError: boolean
@@ -83,6 +85,8 @@ let initialState: State = {
   passwordconfirm: "",
   displayName: "",
   photoURL: "",
+  uid:"",
+  departmentId:"",
   isButtonDisabled: true,
   helperText: "",
   isError: false
@@ -91,8 +95,8 @@ let initialState: State = {
 let updatProfileData = {
     displayName: "",
     photoURL: ""
-  };
-  
+};
+
 
 type Action =
   | { type: "setUsername", payload: string }
@@ -100,23 +104,24 @@ type Action =
   | { type: "setPasswordConfirm", payload: string }
   | { type: "setDisplayName", payload: string }
   | { type: "setPhotoURL", payload: string }
+  | { type: "setDepartment", payload: string }
   | { type: "setIsButtonDisabled", payload: boolean }
   | { type: "signupSuccess", payload: string }
   | { type: "signupFailed", payload: string }
   | { type: "setIsError", payload: boolean };
 
 const reducer = (state: State, action: Action): State => {
-  switch (action.type) {
+switch (action.type) {
     case "setUsername":
-      return {
+        return {
         ...state,
         username: action.payload
-      };
+    };
     case "setPassword":
-      return {
+        return {
         ...state,
         password: action.payload
-      };
+    };
     case "setPasswordConfirm":
     return {
         ...state,
@@ -133,29 +138,34 @@ const reducer = (state: State, action: Action): State => {
         photoURL: action.payload
     };
     case "setIsButtonDisabled":
-      return {
+        return {
         ...state,
         isButtonDisabled: action.payload
-      };
+    };
     case "signupSuccess":
-      return {
+        return {
         ...state,
         helperText: action.payload,
         isError: false
-      };
+    };
+    case "setDepartment":
+    return {
+        ...state,
+        departmentId: action.payload + ""
+    };
     case "signupFailed":
-      return {
+        return {
         ...state,
         helperText: action.payload,
         isError: true
-      };
+    };
     case "setIsError":
-      return {
+        return {
         ...state,
         isError: action.payload
-      };
+    };
     default:
-       return state;
+        return state;
   }
 };
 
@@ -173,6 +183,7 @@ const UpdateProfile = () => {
     //NULLだと@material-uiのButtonでエラーになったのでvalueに値をいれる
     currentUser.displayName ? initialState = {...initialState,displayName:currentUser.displayName} : initialState = {...initialState,displayName:""}
     currentUser.photoURL ? initialState = {...initialState,photoURL:currentUser.photoURL} : initialState = {...initialState,photoURL:""}
+    currentUser.uid ? initialState = {...initialState,uid:currentUser.uid} : initialState = {...initialState,uid:""}
 
     //...initialStateはinitialStateの配列です。「,username:currentUser.email,displayName:currentUser.email」はinitialStateのusernameとdisplayNameだけを更新しています
     initialState = {...initialState,username:currentUser.email}
@@ -188,6 +199,10 @@ const UpdateProfile = () => {
 
     const { register, handleSubmit, errors ,formState} = useForm();
     const history = useHistory()
+    const [departmentList, setDepartmentList] = useState([])
+    const [expansionData, setExpansionData] = React.useState(false);      //拡張用のデータの有無
+    const [expansionDocId, setExpansionDocId] = React.useState(false);      //拡張用のデータID
+
 
     useEffect(() => {
             if (state.password.trim() !== state.passwordconfirm.trim()){
@@ -210,6 +225,52 @@ const UpdateProfile = () => {
                 });
             }
         }, [state.username, state.password, state.passwordconfirm]);
+
+    useEffect(() => {
+        async function fetchData() { 
+            console.log("render")
+            console.log(currentUser.uid)
+
+            if (currentUser.uid){
+                var query = await db.collection("members").where("uid", "==", currentUser.uid).get();
+                console.log("query",query)
+                console.log("query.empty",query.empty)
+
+                if (!query.empty) {
+                    //this.setState({
+                    //    member: doc.data(),
+                    //});
+
+                    const result = query.docs.map(doc => doc.data());
+                    console.log(result[0].departmentId)
+                    dispatch({
+                        type: "setDepartment",
+                        payload: result[0].departmentId 
+                    });
+                    console.log("データ読み込み内部のrender")
+                    setExpansionData(true)
+                    setExpansionDocId(result[0].docId)
+
+                } else {
+                    console.log("データが存在しない")
+                    setExpansionData(false)
+                }
+            }    
+        }
+        async function departmentData() { 
+            const colRef = db.collection("departments")
+            .orderBy('departmentId');
+
+            const snapshots = await colRef.get();
+            var docs = snapshots.docs.map(function (doc) {
+                return doc.data();
+            });
+            setDepartmentList(docs)
+        }
+        departmentData();    //部署データ読み込み(セレクトボックスで使う方を先に読み込む)
+        fetchData();
+    },[currentUser.uid]);
+
 
     async function handleUpdateProfile (data) {  //react-hook-formを導入したためevent -> dataに変更
         //event.preventDefault()      //react-hook-formを導入したため削除
@@ -235,6 +296,37 @@ const UpdateProfile = () => {
                 console.log("updatePassword")
                 promises.push(updatePassword(state.password))
             }
+
+            if (expansionData){
+                let timestamp = firebase.firestore.FieldValue.serverTimestamp()
+                promises.push(
+                    db.collection("members").doc(expansionDocId).update({
+                    uid: currentUser.uid,
+                    displayName: state.displayName,
+                    email: state.username,
+                    photoURL:state.photoURL,
+                    departmentId: state.departmentId,
+                    updatedAt: timestamp,
+                    })
+                )
+            } else {
+                let timestamp = firebase.firestore.FieldValue.serverTimestamp()
+                const docId = db.collection("members").doc().id;
+
+                promises.push(
+                    db.collection("members").doc(docId).set({
+                        docId: docId,
+                        uid: currentUser.uid,
+                        displayName: state.displayName,
+                        photoURL:state.photoURL,
+                        email: state.username,
+                        departmentId: state.departmentId,
+                        createdAt: timestamp,
+                        updatedAt: timestamp,
+                    })
+                )    
+            }
+
 
             if (state.displayName !== currentUser.displayName || state.photoURL !== currentUser.photoURL) {
                 updatProfileData = {...updatProfileData
@@ -330,6 +422,12 @@ const UpdateProfile = () => {
         });
     };
 
+    const handleDepartmentChange: React.ChangeEventHandler<HTMLInputElement> = (event) => {
+        dispatch({
+            type: "setDepartment",
+            payload: event.target.value
+        });
+    };
 
     async function handlesendEmailVerification() {
         setError("")
@@ -377,7 +475,7 @@ const UpdateProfile = () => {
             console.log(imagedata)
             // アップロード処理
             console.log("アップロード処理");
-            const storages = app.storage();//storageを参照
+            const storages = firebase.storage();//storageを参照
             const storageRef = storages.ref("images/users/" + currentUser.uid + "/");//どのフォルダの配下に入れるか
             const imagesRef = storageRef.child("profilePicture.png");//ファイル名
 
@@ -597,7 +695,29 @@ const UpdateProfile = () => {
                         
                     </Modal>
 
-
+                    {departmentList && <>
+                        <InputLabel className={classes.InputLabel} id="department-select-label">部署</InputLabel>
+                        <Select
+                            fullWidth
+                            labelId="department-select-label"
+                            id="department-select"
+                            value={state.departmentId}
+                            onChange={handleDepartmentChange}
+                            defaultValue={"0001"}
+                        >
+                            {
+                                departmentList.map((item,index) => {
+                                    return (
+                                        <MenuItem key={item.departmentName} value={ item.departmentId }   >
+                                            {item.departmentName}:
+                                        </MenuItem>
+                                    )
+                                })
+                            }
+                            <MenuItem key={"9999"} value={"9999"} >未所属</MenuItem>
+                        </Select>
+                    </>
+                    }        
 
                     <Button
                         variant="contained"
