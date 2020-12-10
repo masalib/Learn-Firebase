@@ -24,6 +24,10 @@ export const TwitterSingUpLogin = (props) => {
     const [twitterMessage, setTwitterMessage] = useState("")
     async function handleTwitterSignup (event) {  
         console.log("handleTwitterSignup")
+        Twitter.setCustomParameters({
+            prompt: 'select_account', // 追加
+        });
+
         try {
             firebase
                 .auth()
@@ -124,6 +128,9 @@ export const TwitterLink = () => {
     async function handleTwitterLinkWithPopup (event) {  
         console.log("handleTwitterLinkWithPopup")
         setTwitterMessage("")
+        Twitter.setCustomParameters({
+            prompt: 'select_account', // 追加
+        });
         currentUser.linkWithPopup(Twitter).then(function(result) {
             console.log("handleTwitterLinkWithPopup:result",result)
             setTwitterMessage("Twitterとリンクしました")
@@ -182,7 +189,7 @@ export const TwitterLink = () => {
                         className={classes.twitterBtn}
                         onClick={handleTwitterLinkWithPopup}
                         >
-                        >認証する
+                        認証する
                     </Button>
                 </>
             }
