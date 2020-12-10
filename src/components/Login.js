@@ -8,8 +8,7 @@ import CardHeader from "@material-ui/core/CardHeader";
 import Button from "@material-ui/core/Button";
 import { useAuth } from "../contexts/AuthContext"
 import { Link , useHistory} from "react-router-dom"
-import firebase , {Twitter } from "../firebase"
-import TwitterIcon from '@material-ui/icons/Twitter';
+import {TwitterSingUpLogin }  from "./firebaseprovider/Twitter"
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -176,42 +175,6 @@ const Login = () => {
         }
     };
 
-    async function handleTwitterLogin (event) {  
-      console.log("handleTwitterLogin")
-      Twitter.setCustomParameters({
-        prompt: 'select_account', // 追加
-      });
-      console.log(Twitter)
-      try {
-        firebase
-          .auth()
-          .signInWithPopup(Twitter)
-          .then((result) => {
-            console.log(result);
-            setTimeout(function(){
-                console.log("リダレクト処理")
-                history.push("/dashboard")
-            },2000);
-
-          });
-      } catch (error) {
-        switch (error.code) {
-          case "auth/network-request-failed":
-              setError("通信がエラーになったのか、またはタイムアウトになりました。通信環境がいい所で再度やり直してください。");
-              break;
-          case "auth/requires-recent-login":	
-              setError("別の端末でログインしているか、セッションが切れたので再度、ログインしてください。(ログインページにリダイレクトします）");
-              setTimeout(function(){
-                  console.log("リダレクト処理")
-                  history.push("/login")
-              },3000);
-              break;
-          default:	//想定外
-              setError("失敗しました。通信環境がいい所で再度やり直してください。");
-        }
-      }
-    }
-
     const handleKeyPress = (event: React.KeyboardEvent) => {
         if (event.keyCode === 13 || event.which === 13) {
 
@@ -302,16 +265,8 @@ const Login = () => {
               Login
             </Button>
             もしくは
-            <Button
-              fullWidth
-              variant="contained"
-              size="large"
-              color="primary"
-              className={classes.loginBtn}
-              onClick={handleTwitterLogin}
-            >
-              <TwitterIcon />TwitterでLoginする
-            </Button>
+            <TwitterSingUpLogin title="TwitterでLoginする"/>
+
           </CardContent>
       </Card>
     </form>

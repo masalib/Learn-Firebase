@@ -16,10 +16,11 @@ import {
 import { useAuth } from "../contexts/AuthContext"
 import { Link , useHistory} from "react-router-dom"
 import AddPhotoAlternateIcon from "@material-ui/icons/AddPhotoAlternate";
-import TwitterIcon from '@material-ui/icons/Twitter';
-import firebase , {db,Twitter} from "../firebase"
+import firebase , {db} from "../firebase"
 import Cropper from "react-cropper";
 import "cropperjs/dist/cropper.css";
+
+import {TwitterLink }  from "./firebaseprovider/Twitter"
 
 
 
@@ -111,7 +112,6 @@ type Action =
   | { type: "setDisplayName", payload: string }
   | { type: "setPhotoURL", payload: string }
   | { type: "setDepartment", payload: string }
-  | { type: "setTwitterLink", payload: boolean }
   | { type: "setIsButtonDisabled", payload: boolean }
   | { type: "signupSuccess", payload: string }
   | { type: "signupFailed", payload: string }
@@ -159,11 +159,6 @@ switch (action.type) {
     return {
         ...state,
         departmentId: action.payload + ""
-    };
-    case "setTwitterLink":
-    return {
-        ...state,
-        isTwitterLink: action.payload
     };
 
     case "signupFailed":
@@ -215,7 +210,6 @@ const UpdateProfile = () => {
     const [departmentList, setDepartmentList] = useState([])
     const [expansionData, setExpansionData] = React.useState(false);      //拡張用のデータの有無
     const [expansionDocId, setExpansionDocId] = React.useState(false);      //拡張用のデータID
-    const [twitterMessage, setTwitterMessage] = useState("")
 
 
     useEffect(() => {
@@ -281,19 +275,6 @@ const UpdateProfile = () => {
                     console.log("データが存在しない")
                     setExpansionData(false)
                 }
-
-                //providerData Linkチェック
-                currentUser.providerData.forEach(element => {
-                    if (element.providerId === "twitter.com" ){
-                        dispatch({
-                            type: "setTwitterLink",
-                            payload: true
-                        });
-                    }
-
-                });
-
-
             }    
         }
         async function departmentData() { 
@@ -558,80 +539,6 @@ const UpdateProfile = () => {
     //あとで原因を調べる。わからない場合は別のツールを検討する
     formState.isSubmitted = false   //一回submittedになるとレンダリングが遅くなり、変な動きするので強制的にfalseにする
 
-
-    //auth.currentUser.linkWithPopup(provider).then(function(result) {
-
-    async function handleTwitterLinkWithPopup (event) {  
-        console.log("handleTwitterLinkWithPopup")
-        setTwitterMessage("")
-        currentUser.linkWithPopup(Twitter).then(function(result) {
-            // Accounts successfully linked.
-            //var credential = result.credential;
-            //var user = result.user;
-            console.log("handleTwitterLinkWithPopup:result",result)
-            dispatch({
-                type: "setTwitterLink",
-                payload: true
-            });
-            setTwitterMessage("Twitterとリンクしました")
-
-        }).catch(function(error) {
-            // Handle Errors here.
-            switch (error.code) {
-                case "auth/network-request-failed":
-                    setTwitterMessage("通信がエラーになったのか、またはタイムアウトになりました。通信環境がいい所で再度やり直してください。");
-                    break;
-                case "auth/credential-already-in-use":	
-                    setTwitterMessage("他のユーザーでTwitter認証しているため、認証ができませんでした。");
-                    break;
-                case "auth/requires-recent-login":	
-                    setTwitterMessage("別の端末でログインしているか、セッションが切れたので再度、ログインしてください。(ログインページにリダイレクトします）");
-                    setTimeout(function(){
-                        console.log("リダレクト処理")
-                        history.push("/login")
-                    },3000);
-                    break;
-                default:	//想定外
-                    setTwitterMessage("失敗しました。通信環境がいい所で再度やり直してください。");
-            }
-            console.log(error)
-            // ...
-        });
-    }
-
-    async function handleTwitterUnLink (event) {  
-        console.log("handleTwitterUnLink")
-        setTwitterMessage("")
-        currentUser.unlink("twitter.com").then(function() {
-            // Auth provider unlinked from account
-            dispatch({
-                type: "setTwitterLink",
-                payload: false
-            });
-            setTwitterMessage("Twitterとのリンクを解除しました")
-
-        }).catch(function(error) {
-            console.log(error)
-            switch (error.code) {
-                case "auth/network-request-failed":
-                    setTwitterMessage("通信がエラーになったのか、またはタイムアウトになりました。通信環境がいい所で再度やり直してください。");
-                    break;
-                case "auth/credential-already-in-use":	
-                    setTwitterMessage("他のユーザーでTwitter認証しているため、認証ができませんでした。");
-                    break;
-                case "auth/requires-recent-login":	
-                    setTwitterMessage("別の端末でログインしているか、セッションが切れたので再度、ログインしてください。(ログインページにリダイレクトします）");
-                    setTimeout(function(){
-                        console.log("リダレクト処理")
-                        history.push("/login")
-                    },3000);
-                    break;
-                default:	//想定外
-                    setTwitterMessage("失敗しました。通信環境がいい所で再度やり直してください。");
-            }
-        });
-   }
-    
     return (
         <div className={classes.container} >
             <Typography variant="h4" align="center" component="h1" gutterBottom>
@@ -831,36 +738,7 @@ const UpdateProfile = () => {
                     }        
 
                     <Typography className={classes.subtitle2} variant="subtitle2"> 外部アプリケーション認証</Typography>
-                    {twitterMessage && <div style={{ color: "red" }}>{twitterMessage}</div>}
-                    {!state.isTwitterLink && 
-                        <><TwitterIcon />Twitter<br />認証されていません
-                            <Button
-                            fullWidth
-                            variant="contained"
-                            size="large"
-                            color="primary"
-                            className={classes.loginBtn}
-                            onClick={handleTwitterLinkWithPopup}
-                            >
-                            Twitterのアカウント認証する
-                            </Button>
-                        </>
-                    }
-                    {state.isTwitterLink && 
-                        <><TwitterIcon />Twitter<br />認証されています
-                        <Button
-                        fullWidth
-                        variant="contained"
-                        size="large"
-                        color="primary"
-                        className={classes.loginBtn}
-                        onClick={handleTwitterUnLink}
-                        >
-                        <TwitterIcon />Twitterのアカウント認証を解除する
-                        </Button>
-                    </>
-                }
-
+                    <TwitterLink />
 
                     <Button
                         variant="contained"

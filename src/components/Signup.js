@@ -9,8 +9,7 @@ import CardHeader from "@material-ui/core/CardHeader";
 import Button from "@material-ui/core/Button";
 import { useAuth } from "../contexts/AuthContext"
 import { Link , useHistory} from "react-router-dom"
-import firebase , {Twitter } from "../firebase"
-import TwitterIcon from '@material-ui/icons/Twitter';
+import {TwitterSingUpLogin }  from "./firebaseprovider/Twitter"
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -246,42 +245,6 @@ const Signup = () => {
     });
   };
 
-  async function handleTwitterSignup (event) {  
-    console.log("handleTwitterSignup")
-    try {
-      firebase
-        .auth()
-        .signInWithPopup(Twitter)
-        .then((result) => {
-          console.log(result);
-          setSuccessMessage("アカウントの作成に成功しました。ダッシュボードにリダレクトします")
-          setTimeout(function(){
-              console.log("リダレクト処理")
-              history.push("/dashboard")
-          },2000);
-        });
-    } catch (error) {
-      switch (error.code) {
-        case "auth/network-request-failed":
-            setError("通信がエラーになったのか、またはタイムアウトになりました。通信環境がいい所で再度やり直してください。");
-            break;
-        case "auth/credential-already-in-use":	
-            setError("他のユーザーでTwitter認証しているため、認証ができませんでした。");
-            break;
-        case "auth/requires-recent-login":	
-            setError("別の端末でログインしているか、セッションが切れたので再度、ログインしてください。(ログインページにリダイレクトします）");
-            setTimeout(function(){
-                console.log("リダレクト処理")
-                history.push("/login")
-            },3000);
-            break;
-        default:	//想定外
-            setError("失敗しました。通信環境がいい所で再度やり直してください。");
-      }
-    }
-
-  }
-
   return (
     <form className={classes.container} noValidate autoComplete="off">
       <Card className={classes.card}>
@@ -349,16 +312,8 @@ const Signup = () => {
             Signup
           </Button>
           もしくは
-            <Button
-              fullWidth
-              variant="contained"
-              size="large"
-              color="primary"
-              className={classes.loginBtn}
-              onClick={handleTwitterSignup}
-            >
-              <TwitterIcon />Twitterでアカウント作成
-            </Button>
+          <TwitterSingUpLogin title="Twitterでアカウント作成"/>
+
         </CardContent>
       </Card>
     </form>
