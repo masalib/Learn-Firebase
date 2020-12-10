@@ -4,12 +4,12 @@ import { createStyles, makeStyles, Theme } from "@material-ui/core/styles";
 import TextField from "@material-ui/core/TextField";
 import Card from "@material-ui/core/Card";
 import CardContent from "@material-ui/core/CardContent";
-import CardActions from "@material-ui/core/CardActions";
 import CardHeader from "@material-ui/core/CardHeader";
 import Button from "@material-ui/core/Button";
 import { useAuth } from "../contexts/AuthContext"
 import { Link , useHistory} from "react-router-dom"
-
+import firebase , {Twitter } from "../firebase"
+import TwitterIcon from '@material-ui/icons/Twitter';
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -176,6 +176,42 @@ const Login = () => {
         }
     };
 
+    async function handleTwitterLogin (event) {  
+      console.log("handleTwitterLogin")
+      Twitter.setCustomParameters({
+        prompt: 'select_account', // 追加
+      });
+      console.log(Twitter)
+      try {
+        firebase
+          .auth()
+          .signInWithPopup(Twitter)
+          .then((result) => {
+            console.log(result);
+            setTimeout(function(){
+                console.log("リダレクト処理")
+                history.push("/dashboard")
+            },2000);
+
+          });
+      } catch (error) {
+        switch (error.code) {
+          case "auth/network-request-failed":
+              setError("通信がエラーになったのか、またはタイムアウトになりました。通信環境がいい所で再度やり直してください。");
+              break;
+          case "auth/requires-recent-login":	
+              setError("別の端末でログインしているか、セッションが切れたので再度、ログインしてください。(ログインページにリダイレクトします）");
+              setTimeout(function(){
+                  console.log("リダレクト処理")
+                  history.push("/login")
+              },3000);
+              break;
+          default:	//想定外
+              setError("失敗しました。通信環境がいい所で再度やり直してください。");
+        }
+      }
+    }
+
     const handleKeyPress = (event: React.KeyboardEvent) => {
         if (event.keyCode === 13 || event.which === 13) {
 
@@ -253,20 +289,30 @@ const Login = () => {
             {errors.password?.type === "minLength" &&
             <div style={{ color: "red" }}>パスワードは6文字以上で入力してください</div>}
           </div>
-          もしアカウントがないなら<Link to="/signup">こちら</Link>からアカウントを作成してください
-        </CardContent>
-        <CardActions>
-          <Button
-            variant="contained"
-            size="large"
-            color="secondary"
-            className={classes.loginBtn}
-            onClick={handleSubmit(handleLogin)}
-            disabled={state.isButtonDisabled}
-          >
-            Login
-          </Button>
-        </CardActions>
+            もしアカウントがないなら<Link to="/signup">こちら</Link>からアカウントを作成してください
+            <Button
+              fullWidth
+              variant="contained"
+              size="large"
+              color="secondary"
+              className={classes.loginBtn}
+              onClick={handleSubmit(handleLogin)}
+              disabled={state.isButtonDisabled}
+            >
+              Login
+            </Button>
+            もしくは
+            <Button
+              fullWidth
+              variant="contained"
+              size="large"
+              color="primary"
+              className={classes.loginBtn}
+              onClick={handleTwitterLogin}
+            >
+              <TwitterIcon />TwitterでLoginする
+            </Button>
+          </CardContent>
       </Card>
     </form>
   );
