@@ -3,6 +3,8 @@
 
 # log
 /.firebase
+*-debug.*
+
 
 # dependencies
 /node_modules
