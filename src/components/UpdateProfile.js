@@ -21,6 +21,7 @@ import Cropper from "react-cropper";
 import "cropperjs/dist/cropper.css";
 
 import {TwitterLink }  from "./firebaseprovider/Twitter"
+import {GoogleLink }  from "./firebaseprovider/Google"
 
 
 
@@ -737,8 +738,11 @@ const UpdateProfile = () => {
                     </>
                     }        
 
-                    <Typography className={classes.subtitle2} variant="subtitle2"> 外部アプリケーション認証</Typography>
+                    <Typography className={classes.subtitle2} variant="subtitle1"> 外部アプリケーション認証</Typography>
+
                     <TwitterLink />
+                    <GoogleLink />
+
 
                     <Button
                         variant="contained"

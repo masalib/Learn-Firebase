@@ -9,6 +9,7 @@ import Button from "@material-ui/core/Button";
 import { useAuth } from "../contexts/AuthContext"
 import { Link , useHistory} from "react-router-dom"
 import {TwitterSingUpLogin }  from "./firebaseprovider/Twitter"
+import {GoogleSingUpLogin }  from "./firebaseprovider/Google"
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -266,6 +267,7 @@ const Login = () => {
             </Button>
             もしくは
             <TwitterSingUpLogin title="TwitterでLoginする"/>
+            <GoogleSingUpLogin title="GoogleでLoginする"/>
 
           </CardContent>
       </Card>

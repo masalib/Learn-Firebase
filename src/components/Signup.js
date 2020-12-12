@@ -10,6 +10,8 @@ import Button from "@material-ui/core/Button";
 import { useAuth } from "../contexts/AuthContext"
 import { Link , useHistory} from "react-router-dom"
 import {TwitterSingUpLogin }  from "./firebaseprovider/Twitter"
+import {GoogleSingUpLogin }  from "./firebaseprovider/Google"
+
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -182,6 +184,9 @@ const Signup = () => {
                 case "auth/email-already-in-use":
                     setError("メールアドレスがすでに使用されています。ログインするか別のメールアドレスで作成してください");
                     break;
+                case "auth/user-disabled":	
+                    setError("入力されたメールアドレスは無効（BAN）になっています。");
+                    break;
                 default:	//想定外
                     setError("アカウントの作成に失敗しました。通信環境がいい所で再度やり直してください。");
             }
@@ -313,6 +318,7 @@ const Signup = () => {
           </Button>
           もしくは
           <TwitterSingUpLogin title="Twitterでアカウント作成"/>
+          <GoogleSingUpLogin title="Googleでアカウント作成"/>
 
         </CardContent>
       </Card>

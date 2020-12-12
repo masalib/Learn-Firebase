@@ -32,6 +32,8 @@ if (process.env.REACT_APP_HOST === "localhost") {
 var storage_obj = firebase.storage();
 
 export const Twitter = new firebase.auth.TwitterAuthProvider();
+export const Google = new firebase.auth.GoogleAuthProvider();
+
 export default firebase;
 export const db = db_obj;
 export const auth = auth_obj;

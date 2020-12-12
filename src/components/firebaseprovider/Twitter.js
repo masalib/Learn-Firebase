@@ -27,38 +27,38 @@ export const TwitterSingUpLogin = (props) => {
         Twitter.setCustomParameters({
             prompt: 'select_account', // 追加
         });
-
-        try {
-            firebase
-                .auth()
-                .signInWithPopup(Twitter)
-                .then((result) => {
-                    console.log(result);
-                    setTwitterMessage("認証に成功しました。ダッシュボードにリダレクトします")
-                    setTimeout(function(){
-                        console.log("リダレクト処理")
-                        history.push("/dashboard")
-                    },1000);
-                });
-            } catch (error) {
-            switch (error.code) {
-                case "auth/network-request-failed":
-                    setTwitterMessage("通信がエラーになったのか、またはタイムアウトになりました。通信環境がいい所で再度やり直してください。");
-                    break;
-                case "auth/credential-already-in-use":	
-                    setTwitterMessage("他のユーザーでTwitter認証しているため、認証ができませんでした。");
-                    break;
-                case "auth/requires-recent-login":	
-                    setTwitterMessage("別の端末でログインしているか、セッションが切れたので再度、ログインしてください。(ログインページにリダイレクトします）");
-                    setTimeout(function(){
-                        console.log("リダレクト処理")
-                        history.push("/login")
-                    },3000);
-                    break;
-                default:	//想定外
-                    setTwitterMessage("失敗しました。通信環境がいい所で再度やり直してください。");
-            }
-        }
+        firebase
+            .auth()
+            .signInWithPopup(Twitter)
+            .then((result) => {
+                console.log(result);
+                setTwitterMessage("認証に成功しました。ダッシュボードにリダレクトします")
+                setTimeout(function(){
+                    console.log("リダレクト処理")
+                    history.push("/dashboard")
+                },1000);
+            }).catch(function(error) {
+                switch (error.code) {
+                    case "auth/network-request-failed":
+                        setTwitterMessage("通信がエラーになったのか、またはタイムアウトになりました。通信環境がいい所で再度やり直してください。");
+                        break;
+                    case "auth/credential-already-in-use":	
+                        setTwitterMessage("他のユーザーでGoogle認証しているため、認証ができませんでした。");
+                        break;
+                    case "auth/user-disabled":	
+                        setTwitterMessage("入力されたアカウントまたはメールアドレスは無効（BAN）になっています。");
+                        break;
+                    case "auth/requires-recent-login":	
+                        setTwitterMessage("別の端末でログインしているか、セッションが切れたので再度、ログインしてください。(ログインページにリダイレクトします）");
+                        setTimeout(function(){
+                            console.log("リダレクト処理")
+                            history.push("/login")
+                        },3000);
+                        break;
+                    default:	//想定外
+                        setTwitterMessage("失敗しました。通信環境がいい所で再度やり直してください。");
+                }
+            });
     }
     return (
         <>
