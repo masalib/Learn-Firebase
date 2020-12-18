@@ -61,29 +61,29 @@ const useStyles = makeStyles((theme: Theme) =>
 
 //state type
 type State = {
-  username: string,
+  email: string,
   displayName:  string,
   departmentId:  string,
 };
 
 let initialState: State = {
-  username: "",
+  email: "",
   displayName: "",
   departmentId: "",
 };
 
 type Action =
-  | { type: "setUsername", payload: string }
+  | { type: "setEmail", payload: string }
   | { type: "setDisplayName", payload: string }
   | { type: "setDepartment", payload: string }
   | { type: "setIsError", payload: boolean };
 
 const reducer = (state: State, action: Action): State => {
   switch (action.type) {
-    case "setUsername":
+    case "setEmail":
       return {
         ...state,
-        username: action.payload
+        email: action.payload
       };
     case "setDisplayName":
     return {
@@ -130,7 +130,7 @@ export const Edit = (props) => {
                     querySnapshot.forEach(function(doc) {
                         // doc.data() is never undefined for query doc snapshots
                         dispatch({
-                            type: "setUsername",
+                            type: "setEmail",
                             payload: doc.data().email
                         });
                         dispatch({
@@ -173,7 +173,7 @@ export const Edit = (props) => {
         db.collection("members").doc(docId).set({
             docId: docId,
             displayName: state.displayName,
-            email: state.username,
+            email: state.email,
             departmentId: state.departmentId,
             createdAt: timestamp,
             updatedAt: timestamp,
@@ -195,7 +195,7 @@ export const Edit = (props) => {
         let timestamp = firebase.firestore.FieldValue.serverTimestamp()
         db.collection("members").doc(docId).update({
             displayName: state.displayName,
-            email: state.username,
+            email: state.email,
             departmentId: state.departmentId,
             updatedAt: timestamp,
         });
@@ -222,9 +222,9 @@ export const Edit = (props) => {
     }
 
 
-    const handleUsernameChange: React.ChangeEventHandler<HTMLInputElement> = (event) => {
+    const handleEmailChange: React.ChangeEventHandler<HTMLInputElement> = (event) => {
         dispatch({
-            type: "setUsername",
+            type: "setEmail",
             payload: event.target.value
         });
     };
@@ -258,17 +258,17 @@ export const Edit = (props) => {
                 <Paper style={{ padding: 16 }}>
                     <TextField
                         fullWidth
-                        id="username"
-                        name="username"
+                        id="email"
+                        name="email"
                         type="email"
                         label="Email"
                         //placeholder="Email"
                         margin="normal"
-                        value={state.username}
-                        onChange={handleUsernameChange}
+                        value={state.email}
+                        onChange={handleEmailChange}
                         inputRef={register({pattern: /^[A-Za-z0-9]{1}[A-Za-z0-9_.-]*@{1}[A-Za-z0-9_.-]{1,}\.[A-Za-z0-9]{1,}$/ })}
                     />
-                    {errors.username?.type === "pattern" &&
+                    {errors.email?.type === "pattern" &&
                     <div style={{ color: "red" }}>メールアドレスの形式で入力されていません</div>}
 
                     <TextField

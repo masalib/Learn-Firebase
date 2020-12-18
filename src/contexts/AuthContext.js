@@ -25,7 +25,7 @@ export function AuthProvider({ children }) {
 
     function sendEmailVerification(){
       const actionCodeSettings = {
-        url: 'http://localhost:3000/dashboard' ,
+        url: process.env.REACT_APP_MAIL_URL + 'dashboard' ,
       }    
       return currentUser.sendEmailVerification(actionCodeSettings)
     }
@@ -34,7 +34,7 @@ export function AuthProvider({ children }) {
     function resetPassword(email) {
       //https://firebase.google.com/docs/auth/web/passing-state-in-email-actions
       const actionCodeSettings = {
-        url: 'http://localhost:3000/?email=' + email,
+        url: process.env.REACT_APP_MAIL_URL + '?email=' + email,
         /*
         iOS: {
           bundleId: 'com.example.ios'

@@ -53,7 +53,7 @@ const initialState: State = {
 };
 
 type Action =
-  | { type: "setUsername", payload: string }
+  | { type: "setEmail", payload: string }
   | { type: "setPassword", payload: string }
   | { type: "setIsButtonDisabled", payload: boolean }
   | { type: "loginSuccess", payload: string }
@@ -62,7 +62,7 @@ type Action =
 
 const reducer = (state: State, action: Action): State => {
   switch (action.type) {
-    case "setUsername":
+    case "setEmail":
       return {
         ...state,
         username: action.payload
@@ -196,11 +196,11 @@ const Login = () => {
 
     }
 
-  const handleUsernameChange: React.ChangeEventHandler<HTMLInputElement> = (
+  const handleEmailChange: React.ChangeEventHandler<HTMLInputElement> = (
     event
   ) => {
     dispatch({
-      type: "setUsername",
+      type: "setEmail",
       payload: event.target.value
     });
   };
@@ -227,10 +227,10 @@ const Login = () => {
                 id="username"
                 name="username"
                 type="email"
-                label="Username"
-                placeholder="Username"
+                label="Email"
+                placeholder="Email"
                 margin="normal"
-                onChange={handleUsernameChange}
+                onChange={handleEmailChange}
                 onKeyPress={handleKeyPress}
                 inputRef={register({pattern: /^[A-Za-z0-9]{1}[A-Za-z0-9_.-]*@{1}[A-Za-z0-9_.-]{1,}\.[A-Za-z0-9]{1,}$/ })}
             />
@@ -253,7 +253,7 @@ const Login = () => {
             {errors.password?.type === "minLength" &&
             <div style={{ color: "red" }}>パスワードは6文字以上で入力してください</div>}
           </div>
-            もしアカウントがないなら<Link to="/signup">こちら</Link>からアカウントを作成してください
+            もしアカウントがないなら<Link to="/signup">こちら</Link>からアカウントを作成してください。パスワードを忘れた方は<Link to="/forgotPassword">こちら</Link>から初期化をおこなってください
             <Button
               fullWidth
               variant="contained"

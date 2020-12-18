@@ -72,7 +72,7 @@ const useStyles = makeStyles((theme: Theme) =>
 
 //state type
 type State = {
-  username: string,
+  email: string,
   password:  string,
   passwordconfirm:  string,
   displayName:  string,
@@ -87,7 +87,7 @@ type State = {
 
 
 let initialState: State = {
-  username: "",
+  email: "",
   password: "",
   passwordconfirm: "",
   displayName: "",
@@ -107,7 +107,7 @@ let updatProfileData = {
 
 
 type Action =
-  | { type: "setUsername", payload: string }
+  | { type: "setEmail", payload: string }
   | { type: "setPassword", payload: string }
   | { type: "setPasswordConfirm", payload: string }
   | { type: "setDisplayName", payload: string }
@@ -120,10 +120,10 @@ type Action =
 
 const reducer = (state: State, action: Action): State => {
 switch (action.type) {
-    case "setUsername":
+    case "setEmail":
         return {
         ...state,
-        username: action.payload
+        email: action.payload
     };
     case "setPassword":
         return {
@@ -193,9 +193,7 @@ const UpdateProfile = () => {
     currentUser.displayName ? initialState = {...initialState,displayName:currentUser.displayName} : initialState = {...initialState,displayName:""}
     currentUser.photoURL ? initialState = {...initialState,photoURL:currentUser.photoURL} : initialState = {...initialState,photoURL:""}
     currentUser.uid ? initialState = {...initialState,uid:currentUser.uid} : initialState = {...initialState,uid:""}
-
-    //...initialStateはinitialStateの配列です。「,username:currentUser.email,displayName:currentUser.email」はinitialStateのusernameとdisplayNameだけを更新しています
-    initialState = {...initialState,username:currentUser.email}
+    currentUser.email ? initialState = {...initialState,email:currentUser.email} : initialState = {...initialState,email:""}    //Twitterログインだと入っていないパターンがあったので対応
 
     const [state, dispatch] = useReducer(reducer, initialState);
     const [error, setError] = useState("")
@@ -214,10 +212,6 @@ const UpdateProfile = () => {
 
 
     useEffect(() => {
-            //console.log("state.password", state.password)
-            //console.log("state.passwordconfirm", state.passwordconfirm)
-            //console.log("state.username", state.username)
-
             if ( state.password && state.passwordconfirm  ) {
                 if (state.password.trim() === state.passwordconfirm.trim()){
                     dispatch({
@@ -231,8 +225,8 @@ const UpdateProfile = () => {
                     });
                 }
             }
-            if (state.username){
-                if (state.username.trim()){
+            if (state.email){
+                if (state.email.trim()){
                     dispatch({
                         type: "setIsButtonDisabled",
                         payload: false
@@ -245,12 +239,10 @@ const UpdateProfile = () => {
                     });
                 }
             }
-        }, [state.username, state.password, state.passwordconfirm]);
+        }, [state.email, state.password, state.passwordconfirm]);
 
     useEffect(() => {
         async function fetchData() { 
-            console.log("render")
-            console.log(currentUser.uid)
 
             if (currentUser.uid){
                 var query = await db.collection("members").where("uid", "==", currentUser.uid).get();
@@ -309,9 +301,9 @@ const UpdateProfile = () => {
             const promises = []
 
             //更新処理をセット
-            if (state.username !== currentUser.email) {
+            if (state.email !== currentUser.email) {
                 console.log("updateEmail")
-                promises.push(updateEmail(state.username))
+                promises.push(updateEmail(state.email))
             }
             if (state.password) {
                 console.log("updatePassword")
@@ -324,7 +316,7 @@ const UpdateProfile = () => {
                     db.collection("members").doc(expansionDocId).update({
                     uid: currentUser.uid,
                     displayName: state.displayName,
-                    email: state.username,
+                    email: state.email,
                     photoURL:state.photoURL,
                     departmentId: state.departmentId,
                     updatedAt: timestamp,
@@ -340,7 +332,7 @@ const UpdateProfile = () => {
                         uid: currentUser.uid,
                         displayName: state.displayName,
                         photoURL:state.photoURL,
-                        email: state.username,
+                        email: state.email,
                         departmentId: state.departmentId,
                         createdAt: timestamp,
                         updatedAt: timestamp,
@@ -415,9 +407,9 @@ const UpdateProfile = () => {
             })
     };
 
-    const handleUsernameChange: React.ChangeEventHandler<HTMLInputElement> = (event) => {
+    const handleEmailChange: React.ChangeEventHandler<HTMLInputElement> = (event) => {
         dispatch({
-            type: "setUsername",
+            type: "setEmail",
             payload: event.target.value
         });
     };
@@ -552,17 +544,17 @@ const UpdateProfile = () => {
                     <TextField
                         error={state.isError}
                         fullWidth
-                        id="username"
-                        name="username"
+                        id="email"
+                        name="email"
                         type="email"
                         label="Email"
                         //placeholder="Email"
                         margin="normal"
-                        value={state.username}
-                        onChange={handleUsernameChange}
+                        value={state.email}
+                        onChange={handleEmailChange}
                         inputRef={register({pattern: /^[A-Za-z0-9]{1}[A-Za-z0-9_.-]*@{1}[A-Za-z0-9_.-]{1,}\.[A-Za-z0-9]{1,}$/ })}
                     />
-                    {errors.username?.type === "pattern" &&
+                    {errors.email?.type === "pattern" &&
                     <div style={{ color: "red" }}>メールアドレスの形式で入力されていません</div>}
                     {!currentUser.emailVerified && <div>メールアドレスが有効化されていません{' '}<Button onClick={handlesendEmailVerification} variant="contained" color="primary">有効化</Button></div>}
 

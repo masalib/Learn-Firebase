@@ -36,30 +36,30 @@ const useStyles = makeStyles((theme: Theme) =>
 
 //state type
 type State = {
-  username: string,
+  email: string,
   isButtonDisabled: boolean,
   helperText: string,
   isError: boolean
 };
 
 const initialState: State = {
-  username: "",
+  email: "",
   isButtonDisabled: true,
   helperText: "",
   isError: false
 };
 
 type Action =
-  | { type: "setUsername", payload: string }
+  | { type: "setEmail", payload: string }
   | { type: "setIsButtonDisabled", payload: boolean }
   | { type: "setIsError", payload: boolean };
 
 const reducer = (state: State, action: Action): State => {
   switch (action.type) {
-    case "setUsername":
+    case "setEmail":
       return {
         ...state,
-        username: action.payload
+        email: action.payload
       };
     case "setIsButtonDisabled":
       return {
@@ -85,7 +85,7 @@ const ForgotPassword = () => {
     const { register, handleSubmit, errors  } = useForm();
 
     useEffect(() => {
-      if (state.username.trim() ){
+      if (state.email.trim() ){
           //trigger();
           dispatch({
             type: "setIsButtonDisabled",
@@ -98,7 +98,7 @@ const ForgotPassword = () => {
             payload: true
           });
       }
-    }, [state.username]);
+    }, [state.email]);
 
     async function handleForgotPassword (data) {  //react-hook-formを導入したためevent -> dataに変更
         //event.preventDefault()      //react-hook-formを導入したため削除
@@ -115,7 +115,7 @@ const ForgotPassword = () => {
             //FirebaseのメールテンプレートがJP（日本語）になっている事が前提です。
             //メールテンプレートで
 
-            await resetPassword(state.username)
+            await resetPassword(state.email)
             setSuccessMessage("パスワードを初期化しました。")
 
             dispatch({
@@ -151,11 +151,11 @@ const ForgotPassword = () => {
         }
     };
 
-  const handleUsernameChange: React.ChangeEventHandler<HTMLInputElement> = (
+  const handleEmailChange: React.ChangeEventHandler<HTMLInputElement> = (
     event
   ) => {
     dispatch({
-      type: "setUsername",
+      type: "setEmail",
       payload: event.target.value
     });
   };
@@ -173,16 +173,16 @@ const ForgotPassword = () => {
             <TextField
                 error={state.isError}
                 fullWidth
-                id="username"
-                name="username"
+                id="email"
+                name="email"
                 type="email"
-                label="Username"
-                placeholder="Username"
+                label="Email"
+                placeholder="Email"
                 margin="normal"
-                onChange={handleUsernameChange}
+                onChange={handleEmailChange}
                 inputRef={register({pattern: /^[A-Za-z0-9]{1}[A-Za-z0-9_.-]*@{1}[A-Za-z0-9_.-]{1,}\.[A-Za-z0-9]{1,}$/ })}
             />
-            {errors.username?.type === "pattern" &&
+            {errors.email?.type === "pattern" &&
             <div style={{ color: "red" }}>メールアドレスの形式で入力されていません</div>}
           </div>
           もしアカウントがないなら<Link to="/signup">こちら</Link>からアカウントを作成してください

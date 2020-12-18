@@ -38,7 +38,7 @@ const useStyles = makeStyles((theme: Theme) =>
 
 //state type
 type State = {
-  username: string,
+  email: string,
   password:  string,
   passwordconfirm:  string,
   isButtonDisabled: boolean,
@@ -48,7 +48,7 @@ type State = {
 
 
 const initialState: State = {
-  username: "",
+  email: "",
   password: "",
   passwordconfirm: "",
   isButtonDisabled: true,
@@ -57,7 +57,7 @@ const initialState: State = {
 };
 
 type Action =
-  | { type: "setUsername", payload: string }
+  | { type: "setEmail", payload: string }
   | { type: "setPassword", payload: string }
   | { type: "setPasswordConfirm", payload: string }
   | { type: "setIsButtonDisabled", payload: boolean }
@@ -67,10 +67,10 @@ type Action =
 
 const reducer = (state: State, action: Action): State => {
   switch (action.type) {
-    case "setUsername":
+    case "setEmail":
       return {
         ...state,
-        username: action.payload
+        email: action.payload
       };
     case "setPassword":
       return {
@@ -125,7 +125,7 @@ const Signup = () => {
                   type: "setIsButtonDisabled",
                   payload: true
                 });        
-            } else if (state.username.trim() && state.password.trim()){
+            } else if (state.email.trim() && state.password.trim()){
                 //trigger();
                 dispatch({
                   type: "setIsButtonDisabled",
@@ -138,7 +138,7 @@ const Signup = () => {
                   payload: true
                 });
             }
-    }, [state.username, state.password, state.passwordconfirm]);
+    }, [state.email, state.password, state.passwordconfirm]);
 
     async function handleSignup (data) {  //react-hook-formを導入したためevent -> dataに変更
         //event.preventDefault()      //react-hook-formを導入したため削除
@@ -152,7 +152,7 @@ const Signup = () => {
                 payload: true
             });
 
-            await signup(state.username, state.passwordconfirm)
+            await signup(state.email, state.passwordconfirm)
             dispatch({
                 type: "signupSuccess",
                 payload: "Signup Successfully"
@@ -192,7 +192,7 @@ const Signup = () => {
             }
             //dispatch({
             //    type: "signupFailed",
-            //    payload: "Incorrect username or password"
+            //    payload: "Incorrect email or password"
             //});
             //sing up ボタンの有効化
             dispatch({
@@ -223,11 +223,11 @@ const Signup = () => {
 
     }
 
-    const handleUsernameChange: React.ChangeEventHandler<HTMLInputElement> = (
+    const handleEmailChange: React.ChangeEventHandler<HTMLInputElement> = (
     event
   ) => {
     dispatch({
-      type: "setUsername",
+      type: "setEmail",
       payload: event.target.value
     });
   };
@@ -261,17 +261,17 @@ const Signup = () => {
             <TextField
                 error={state.isError}
                 fullWidth
-                id="username"
-                name="username"
+                id="email"
+                name="email"
                 type="email"
-                label="Username"
-                placeholder="Username"
+                label="Email"
+                placeholder="Email"
                 margin="normal"
-                onChange={handleUsernameChange}
+                onChange={handleEmailChange}
                 onKeyPress={handleKeyPress}
                 inputRef={register({pattern: /^[A-Za-z0-9]{1}[A-Za-z0-9_.-]*@{1}[A-Za-z0-9_.-]{1,}\.[A-Za-z0-9]{1,}$/ })}
             />
-            {errors.username?.type === "pattern" &&
+            {errors.email?.type === "pattern" &&
             <div style={{ color: "red" }}>メールアドレスの形式で入力されていません</div>}
 
             <TextField
