@@ -66,7 +66,9 @@ const Dashboard = () => {
             <h2>
                 <Link to="/upLoadTest">upLoadTest</Link>
             </h2>
-
+            <h2>
+                <Link to="/chat/index">chat</Link>
+            </h2>
             <div>
                 <Button
                 variant="contained"

@@ -2,6 +2,8 @@ import firebase from "firebase/app"
 import "firebase/auth"
 import "firebase/storage";
 import 'firebase/firestore';
+import 'firebase/database';
+
 
 const firebaseConfig = {
     apiKey: process.env.REACT_APP_APIKEY,
@@ -29,6 +31,15 @@ if (process.env.REACT_APP_HOST === "localhost") {
   console.log("useEmulator:firestore")
 }
 
+var database_obj = firebase.database();
+if (process.env.REACT_APP_HOST === "localhost") {
+  database_obj.useEmulator("localhost", 9000);
+  console.log("useEmulator:RealtimeDatabase")
+}
+
+
+
+
 var storage_obj = firebase.storage();
 
 export const Twitter = new firebase.auth.TwitterAuthProvider();
@@ -36,6 +47,7 @@ export const Google = new firebase.auth.GoogleAuthProvider();
 
 export default firebase;
 export const db = db_obj;
+export const database = database_obj;
 export const auth = auth_obj;
 export const storage = storage_obj;
 

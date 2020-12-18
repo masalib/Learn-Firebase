@@ -46,3 +46,6 @@ gsutil cors get gs://<your-cloud-storage-bucket>
 #  gsutil cors get gs://learn-firebase-masalib.appspot.com  
 #  // => [{"maxAgeSeconds": 3600, "method": ["GET"], "origin": ["*"]}]  
 
+## emulators startコマンド
+firebase emulators:start
+

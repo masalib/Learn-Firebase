@@ -19,6 +19,9 @@ const Home = () => {
             <h2>
                 <Link to="/screens/index">screensの一覧</Link>
             </h2>
+            <h2>
+                <Link to="/chat/index">chat</Link>
+            </h2>
 
 
             <h2>

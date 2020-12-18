@@ -20,6 +20,9 @@ import UpdateProfile  from "./UpdateProfile"
 import UpLoadTest  from "./UpLoadTest"
 import {Index as screensIndex }  from "./screens/Index"
 import {Edit as screensEdit }  from "./screens/Edit"
+import {Index as chatIndex }  from "./chat/Index"
+import {TextInput as chatTextInput }  from "./chat/TextInput"
+
 
 
 function App() {
@@ -38,6 +41,10 @@ function App() {
           <AuthFirebaseRoute path="/dashboard" component={Dashboard} />
           <AuthFirebaseRoute path="/upLoadTest" component={UpLoadTest} />
           <AuthFirebaseRoute path="/UpdateProfile" component={UpdateProfile} />
+
+          <AuthFirebaseRoute path="/chat/index" component={chatIndex} />
+          <AuthFirebaseRoute path="/chat/textinput" component={chatTextInput} />
+
 
           <Route path="/screens/index" component={screensIndex} />
           <Route path="/screens/edit/:docId" component={screensEdit} />
