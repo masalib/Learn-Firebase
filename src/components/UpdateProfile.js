@@ -22,7 +22,7 @@ import "cropperjs/dist/cropper.css";
 
 import {TwitterLink }  from "./firebaseprovider/Twitter"
 import {GoogleLink }  from "./firebaseprovider/Google"
-
+import loadImage from 'blueimp-load-image'  //画像圧縮
 
 
 const useStyles = makeStyles((theme: Theme) =>
@@ -484,45 +484,65 @@ const UpdateProfile = () => {
         e.preventDefault();
         if (typeof cropper !== "undefined") {
         //console.log(cropper.getCroppedCanvas().toDataURL())
-            let imagedata = await cropper.getCroppedCanvas().toDataURL()
-            console.log(imagedata)
-            // アップロード処理
-            console.log("アップロード処理");
-            const storages = firebase.storage();//storageを参照
-            const storageRef = storages.ref("images/users/" + currentUser.uid + "/");//どのフォルダの配下に入れるか
-            const imagesRef = storageRef.child("profilePicture.png");//ファイル名
+            let imagedata = await cropper.getCroppedCanvas().toDataURL('image/jpeg')
+            //console.log(imagedata)
 
-            console.log("ファイルをアップする行為");
-            //const upLoadTask = imagesRef.put(imagedata);
-            const upLoadTask = imagesRef.putString(imagedata, 'data_url');
+            //data_url => Blob 
+            let byteString = atob( imagedata.split( "," )[1] ) ;
+            let mimeType = imagedata.match( /(:)([a-z\/]+)(;)/ )[2] ; //UnnecessaryのWARNINGがでるが無視するしかない
 
+            for( var i=0, l=byteString.length, content=new Uint8Array( l ); l>i; i++ ) {
+                content[i] = byteString.charCodeAt( i ) ;
+            }
+            let blob = new Blob( [ content ], {
+                type: mimeType ,
+            } ) ;
 
-            console.log("タスク実行前");
-            setOpenCircularProgress(true);
-            upLoadTask.on(
-                "state_changed",
-                (snapshot) => {
-                    console.log("snapshot", snapshot);
-                },
-                (error) => {
-                    console.log("err", error);
-                    setError("ファイルのアップロードに失敗しました")
-                    setOpenCircularProgress(false);
-                },
-                () => {
-                    upLoadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {
-                    //console.log("File available at", downloadURL);
-                    const url = new URL(downloadURL)
-                    console.log(url.href + url.pathname + "?alt=media")
-                    dispatch({
-                        type: "setPhotoURL",
-                        payload: url.href + url.pathname + "?alt=media"
+            const canvas = await loadImage(blob, {
+                maxWidth: 960,
+                canvas: true,
+            });
+
+            canvas.image.toBlob((blob) => {
+                //firebase.storage().ref().child(`/${files[0].name}`).put(blob);
+                // アップロード処理
+                console.log("アップロード処理");
+                const storages = firebase.storage();//storageを参照
+                const storageRef = storages.ref("images/users/" + currentUser.uid + "/");//どのフォルダの配下に入れるか
+                const imagesRef = storageRef.child("profilePicture.png");//ファイル名
+
+                console.log("ファイルをアップする行為");
+                const upLoadTask = imagesRef.put(blob);
+
+                console.log("タスク実行前");
+                setOpenCircularProgress(true);
+                upLoadTask.on(
+                    "state_changed",
+                    (snapshot) => {
+                        console.log("snapshot", snapshot);
+                    },
+                    (error) => {
+                        console.log("err", error);
+                        setError("ファイルのアップロードに失敗しました")
+                        setOpenCircularProgress(false);
+                    },
+                    () => {
+                        upLoadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {
+                        //console.log("File available at", downloadURL);
+                        const url = new URL(downloadURL)
+                        console.log(url.href + url.pathname + "?alt=media")
+                        dispatch({
+                            type: "setPhotoURL",
+                            payload: url.href + url.pathname + "?alt=media"
+                            });
                         });
-                    });
-                    setOpen(false);
-                    setOpenCircularProgress(false);
-                }
-            );
+                        setOpen(false);
+                        setOpenCircularProgress(false);
+                    }
+                );
+            }, mimeType);
+
+            //const upLoadTask = imagesRef.putString(imagedata, 'data_url');
         }
     };
 

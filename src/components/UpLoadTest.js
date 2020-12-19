@@ -1,8 +1,8 @@
-import React , { useState } from 'react'
+import React , { useState, useEffect } from 'react'
 import { Link } from "react-router-dom"
 import firebase, {storage}  from "../firebase"
 import { useAuth } from "../contexts/AuthContext"
-
+import axios from 'axios'
 //import { v4 as uuid } from 'uuid';
 
 const UpLoadTest = () => {
@@ -10,20 +10,27 @@ const UpLoadTest = () => {
         const [imageUrl, setImageUrl] = useState("");
         const { currentUser} = useAuth()
 
+        useEffect(() => {
+            async function fetchData() { 
+                const idToken = await currentUser.getIdToken(true)   
+                console.log(idToken) 
+                //const {data}  = await axios.get('http://localhost:20001/openid/index.php', {
+                //const {data}  = await axios.get('https://firebase-auth-app-masalib.herokuapp.com/index.php', {
+                const {data}  = await axios.get('https://firebase-auth-app-masalib.herokuapp.com/index.php', {
+                    headers: {
+                        Authorization: `Bearer ${idToken}`,
+                    }
+                })
+                console.log(data)
+
+            }
+            fetchData();
+        } ,[currentUser]);
 
 
         const handleImage = event => {
             const image = event.target.files[0];
             setImage(image);
-
-            currentUser.getIdToken(true)
-            .then((idToken) => {
-              console.log(idToken);
-            })
-            .catch((error) => {
-              console.log(error);
-            });
-
         };
 
         const onSubmit = event => {
