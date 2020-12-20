@@ -1,34 +1,22 @@
 import React from 'react'
-import { Link } from "react-router-dom"
+import AppAppBar from './views/AppAppBar';
+import Product from './views/Product';
+import ProductValues from './views/ProductValues';
+import ProductCategories from './views/ProductCategories';
+import Pricing from './views/Pricing';
 
 
 const Home = () => {
     return (
-        <div>
-            Home：
-            テスト用のリンク（あとで治す）
-            <h2>
-                <Link to="/login">Login</Link>
-            </h2>
-            <h2>
-                <Link to="/signup">signup</Link>
-            </h2>
-            <h2>
-                <Link to="/screens/edit">screensの新規作成</Link>
-            </h2>
-            <h2>
-                <Link to="/screens/index">screensの一覧</Link>
-            </h2>
-            <h2>
-                <Link to="/chat/index">chat</Link>
-            </h2>
+        <React.Fragment>
+            <AppAppBar />
+            <Product />
+            <ProductValues />
+            <ProductCategories />
+            <Pricing />
+        </React.Fragment>
 
-
-            <h2>
-                <Link to="/forgotPassword">forgotPassword</Link>
-            </h2>
-        </div>
-    )
+        )
 }
 
 export default Home

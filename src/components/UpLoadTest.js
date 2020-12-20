@@ -16,7 +16,7 @@ const UpLoadTest = () => {
                 console.log(idToken) 
                 //const {data}  = await axios.get('http://localhost:20001/openid/index.php', {
                 //const {data}  = await axios.get('https://firebase-auth-app-masalib.herokuapp.com/index.php', {
-                const {data}  = await axios.get('https://firebase-auth-app-masalib.herokuapp.com/index.php', {
+                const {data}  = await axios.get('http://localhost:20001/openid/index.php', {
                     headers: {
                         Authorization: `Bearer ${idToken}`,
                     }
