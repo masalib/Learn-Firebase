@@ -1,6 +1,11 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 
+# dev
+.eslintrc.js
+eslintrc.json
+.prettierrc
+
 # log
 /.firebase
 *-debug.*
